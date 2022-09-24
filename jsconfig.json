@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "checkJs":false,
+    "strict": true,
+    "baseUrl": "./",
+    "paths": {
+      "@client/*": ["./src/client/*"],
+      "@gameboy/*": ["./src/gameboy/*"],
+      "@common/*": ["./src/common/*"]
+    }
+  },
+  "exclude": [
+    "./node_modules",
+    "./dist"
+  ],
+}
