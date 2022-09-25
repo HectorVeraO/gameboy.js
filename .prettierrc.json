@@ -1,0 +1,11 @@
+{
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "useTabs": false,
+  "arrowParens": "always",
+  "editorconfig": false,
+  "proseWrap": "preserve",
+  "quoteProps": "preserve",
+  "singleQuote": true,
+  "printWidth": 999
+}
