@@ -38,6 +38,8 @@ export class System {
   constructor() {
   }
 
+  static #bitsPerWord = 8;
+
   static #createMemory(capacity) {
     return ContainerFactory.create({ capacity: capacity, bitsPerSlot: System.#bitsPerWord });
   }

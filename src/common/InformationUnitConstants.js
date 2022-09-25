@@ -2,7 +2,7 @@ const kibi = 2 ** 10;
 const mebi = 2 ** 20;
 
 export const bit = 1;
-export const byte = 1 * bit;;
+export const byte = 1 * bit;
 
 export const kibibit = kibi * bit;
 export const Kib = kibibit;

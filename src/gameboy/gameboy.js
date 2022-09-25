@@ -2,7 +2,7 @@
 /**
  * Abstraction representing the exposed functionality to the end user
  */
-class Gameboy {
+export class Gameboy {
   /** Cartridge's name */
   game() {
     // TODO: Implement
