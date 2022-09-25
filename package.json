@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/HectorVeraO/gameboy.js#readme",
   "devDependencies": {
+    "eslint": "^8.24.0",
     "html-loader": "^4.1.0",
     "prettier": "2.7.1",
     "webpack": "^5.74.0",
