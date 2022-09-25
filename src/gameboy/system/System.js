@@ -29,7 +29,7 @@ export class System {
   /** I/O registers */
   ior = System.#createMemory(0x0080 * byte); // TODO: Confirm, memory mapped from 0xFF00 to 0xFF7F
 
-  /** Forbidden memory (Nintendo says use of this aria is prohibited) */
+  /** Forbidden memory (Nintendo says use of this area is prohibited) */
   fmem = System.#createMemory(0x0060 * byte); // TODO: Confirm, memory mapped from 0xFEA0 to 0xFEFF
 
   /** Interrupt Enable register (IE) */
