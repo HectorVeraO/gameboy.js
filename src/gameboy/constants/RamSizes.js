@@ -1,4 +1,4 @@
-import { KiB } from '@common/InformationUnitConstants';
+import { KiB } from '@common/constants/InformationUnits';
 
 /** Bit capacity of a single RAM bank */
 export const RAM_BANK_CAPACITY = 8 * KiB;

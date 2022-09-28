@@ -1,5 +1,5 @@
 import { ContainerFactory } from '@common/ContainerFactory';
-import { KiB } from '@common/InformationUnitConstants';
+import { KiB } from '@common/constants/InformationUnits';
 
 /**
  * 32 KiB ROM only

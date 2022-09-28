@@ -1,4 +1,4 @@
-import { KiB, MiB } from "@common/InformationUnitConstants";
+import { KiB, MiB } from "@common/constants/InformationUnits";
 
 /** Bit capacity of a single ROM bank */
 export const ROM_BANK_CAPACITY = 16 * KiB

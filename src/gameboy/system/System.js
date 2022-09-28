@@ -1,5 +1,5 @@
 import { ContainerFactory } from "@common/ContainerFactory";
-import { byte, KiB } from "@common/InformationUnitConstants";
+import { byte, KiB } from "@common/constants/InformationUnits";
 
 /**
  * GameBoy SoC representation (plus the Work RAM and Video RAM for convenience)
