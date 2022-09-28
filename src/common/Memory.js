@@ -25,18 +25,18 @@ export class Memory {
   }
 
   switchBank(bankIndex) {
-    this.activeBankIndex = bankIndex % this.#bankCount;
+    this.#activeBankIndex = bankIndex % this.#bankCount;
   }
 
   #buffer;
   #byteCapacity;
 
   #banks;
-  activeBankIndex;
+  #activeBankIndex;
   #bankCount;
   #bankByteCapacity;
 
   #getActiveBank() {
-    return this.#banks[this.activeBankIndex];
+    return this.#banks[this.#activeBankIndex];
   }
 }
