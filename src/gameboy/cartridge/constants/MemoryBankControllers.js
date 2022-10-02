@@ -1,0 +1,33 @@
+import { Mbc1 } from "../memory-bank-controllers/Mbc1";
+import { NoMbc } from "../memory-bank-controllers/NoMbc";
+
+export const MBC_BY_CARTRIDGE_TYPE = {
+  0x00: NoMbc,
+  0x01: Mbc1,
+  0x02: Mbc1,
+  0x03: Mbc1,
+  0x05: null,
+  0x06: null,
+  0x08: null,
+  0x09: null,
+  0x0B: null,
+  0x0C: null,
+  0x0D: null,
+  0x0F: null,
+  0x10: null,
+  0x11: null,
+  0x12: null,
+  0x13: null,
+  0x19: null,
+  0x1A: null,
+  0x1B: null,
+  0x1C: null,
+  0x1D: null,
+  0x1E: null,
+  0x20: null,
+  0x22: null,
+  0xFC: null,
+  0xFD: null,
+  0xFE: null,
+  0xFF: null,
+}
