@@ -1,21 +1,28 @@
-import { ContainerFactory } from "@common/ContainerFactory";
-import { MiB } from "@common/constants/InformationUnits";
+import { byte } from "@common/constants/InformationUnits";
+import { getMinimumBitWidth, MASK_BY_BIT_WIDTH } from "@common/Number";
 import { RAM_BANK_CAPACITY, RAM_SIZES } from "@gameboy/constants/RamSizes";
 import { ROM_BANK_CAPACITY, ROM_SIZES } from "@gameboy/constants/RomSizes";
-import { Memory } from "@common/MemoryFactory";
-
-// TODO: Move this shit
-const getMinimumBitWidth = (number) => Math.floor(Math.log2(number)) + 1;
-const MASK_BY_BIT_WIDTH = [ 0x00, 0x01, 0x03, 0x07, 0x0F, 0x1F];
+// eslint-disable-next-line no-unused-vars
+import { Header } from "../Header";
 
 /**
  * Max 2MB ROM and/or 32 KiB RAM
  * See: https://gbdev.io/pandocs/MBC1.html
+ * 
+ * TODO: Implement "MBC1M" 1 MiB Multi-Game Compilation Carts (https://gbdev.io/pandocs/MBC1.html#mbc1m-1-mib-multi-game-compilation-carts)
  */
 export class Mbc1 {
-  constructor(header) {
+
+  /**
+   * @param {Header} header 
+   * @param {Uint8Array} bytes 
+   */
+  constructor(header, bytes) {
     this.#romBankCount = ROM_SIZES[header.romSize];
-    this.#rom = new Memory(ROM_BANK_CAPACITY * this.#romBankCount, this.#romBankCount);
+    // this.#rom = new Uint8Array(ROM_BANK_CAPACITY / byte * this.#romBankCount);
+    this.#rom = new Uint8Array(bytes); // TODO: Not sure about this
+    console.log(`Requested ROM size ${ROM_BANK_CAPACITY / byte * this.#romBankCount} bytes`);
+    console.log(`GamePak size ${bytes.length} bytes`);
 
     // ROM banking register can address at most 32 ROM banks
     // Some games extend this register by wiring the RAM banking register
@@ -24,37 +31,91 @@ export class Mbc1 {
     this.#extendedRomMode = this.#romBankCount > 32;
 
     this.#ramBankCount = this.#extendedRomMode ? 1 : RAM_SIZES[header.ramSize];
-    this.#ram = new Memory(RAM_BANK_CAPACITY * this.#ramBankCount, this.#ramBankCount);
+    this.#ram = new Uint8Array(RAM_BANK_CAPACITY / byte * this.#ramBankCount);
+
+    const ramBankCountBitWidth = getMinimumBitWidth(this.#ramBankCount - 1);
+    this.#ramBankSelectionMask = MASK_BY_BIT_WIDTH[ramBankCountBitWidth];
   }
 
   read(address) {
-    const { mappedAddress, container } = this.#resolveMemoryRegion(address);
+    let mappedAddress;
+    let container;
+
+    if (address >= 0x0000 && address <= 0x3FFF) {
+      if (this.#registerBankingModeSelect === 0) {
+        mappedAddress = address & 0x3FFF;
+        container = this.#rom;
+      } else {
+        mappedAddress = address & 0x3FFF; // From address
+        mappedAddress |= (this.#registerRomBankNumber <= 0x01 ? 1 : 0) << 14; // Zero to one translation
+        mappedAddress |= (this.#registerRamBankNumber & (this.#romBankSelectionMask >>> 5)) << 19; // Take needed bits from extended ROM banking register (AKA stolen RAM banking register)
+        container = this.#rom;
+      }
+    }
+
+    if (address >= 0x4000 && address <= 0x7FFF) {
+      const extendedRomBankingRegister = (this.#registerRamBankNumber << 5) | this.#registerRomBankNumber;
+      mappedAddress = address & 0x3FFF;
+      mappedAddress |= (extendedRomBankingRegister & this.#romBankSelectionMask) << 14;
+      container = this.#rom;
+    }
+
+    if (address >= 0xA000 && address <= 0xBFFF && this.#registerRamEnable) {
+      if (this.#registerBankingModeSelect === 0) {
+        mappedAddress = address & 0x0FFF;
+        container = this.#ram;
+      } else {
+        mappedAddress = address & 0x0FFF;
+        mappedAddress |= (this.#registerRamBankNumber & this.#ramBankSelectionMask) << 13;
+        container = this.#ram;
+      }
+
+    }
+
+    if (!mappedAddress || !container) {
+      mappedAddress = 0;
+      container = Mbc1.#undefinedRegion; // Undefined reads return open bus values (often 0xFF, pulled high)
+    }
+
     return container[mappedAddress];
   }
 
   write(address, value) {
-    const { mappedAddress, container } = this.#resolveMemoryRegion(address);
-    container[mappedAddress] = value;
+    if (address >= 0x0000 && address <= 0x1FFF) {
+      this.#registerRamEnable = 0x0A === (value & 0x0F);
+      return;
+    }
+    
+    if (address >= 0x2000 && address <= 0x3FFF) {
+      this.#registerRomBankNumber = (value & Mbc1.#romBankingRegisterMask) || 0x01;
+      return;
+    }
+    
+    if (address >= 0x4000 && address <= 0x5FFF) {
+      this.#registerRamBankNumber = value & 0x03;
+      return;
+    }
+    
+    if (address >= 0x6000 && address <= 0x7FFF) {
+      this.#registerBankingModeSelect = value & 0x01;
+      return;
+    }
+
+    if (address >= 0xA000 && address <= 0xBFFF && this.#registerRamEnable) {
+      const mappedAddress = (this.#registerRamBankNumber << 13) | (address & 0x0FFF);
+      this.#ram[mappedAddress] = value;
+    }
   }
 
-  static #undefinedRegion = {
-    mappedAddress: 0,
-    container: ContainerFactory.create({ capacity: 1, bitsPerSlot: 8, initialValue: 0xff })
-  };
+  static #undefinedRegion = new Uint8Array(1);
 
   static #romBankingRegisterMask = 0x1F;
-
-  /** 5-bit wide */
-  #romBankingRegister;
 
   /** The mask in the GameBoy is only as wide as it's needed to address all of the ROM banks */
   #romBankSelectionMask;
 
-  /** 2-bit wide, some games wire this to the ROM banking register: (ramBankingRegister << 5) | romBankingRegister */
-  #ramBankingRegister;
-
-  /** 7-bit wide, extended ROM register, this didn't exist in the GameBoy but might simplify some logic */
-  #extendedRomRegister;
+  /** The mask in the GameBoy is only as wide as it's needed to address all of the RAM banks */
+  #ramBankSelectionMask;
 
   /** Writing 0x~A ('~' meaning any hex char) into 0x0000...0x1FFF enables RAM access */
   #registerRamEnable;
@@ -64,12 +125,6 @@ export class Mbc1 {
 
   /** 2-bit wide, used to map a RAM bank to the 0xA000...0xBFFF region or as bits 5 and 6 for ROM bank selection */
   #registerRamBankNumber;
-
-  
-
-  /** 
-    * 
-    */
    
   /**
    * 1-bit wide, used to switch between Simple Banking Mode and RAM banking mode with advanced ROM banking.
@@ -85,81 +140,14 @@ export class Mbc1 {
    */
   #registerBankingModeSelect;
 
-  #memoryRegions;
+  /** Some games use the RAM banking register as an extension of the ROM banking register */
   #extendedRomMode;
 
+  /** Array containing ROM data */
   #rom;
   #romBankCount;
 
+  /** Array containing RAM data */
   #ram;
   #ramBankCount;
-
-  // TODO: Factor out this shit
-  // TODO: Apply effects of #registerBankingModeSelect
-  #resolveMemoryAccess(address, value = null) {
-    const isWrite = value !== null && value !== undefined;
-
-    if (address >= 0x0000 && address <= 0x1FFF) {
-      if (isWrite) {
-        this.#registerRamEnable = 0x0A === (value & 0x0F);
-      }
-
-      return {};
-    }
-
-    if (address >= 0x2000 && address <= 0x3FFF) {
-      if (isWrite) {
-        this.#registerRomBankNumber = (value & 0x1F) || 0x01;
-        // TODO: Computation of registerRamBankNumber might be missing here
-        // TODO: Computation of the effective rom bank number might be missing here
-      }
-
-      return {};
-    }
-
-    if (address >= 0x4000 && address <= 0x5FFF) {
-      if (isWrite) {
-        this.#registerRamBankNumber = value & 0x03;
-      }
-
-      return {};
-    }
-
-    if (address >= 0x6000 && address <= 0x7FFF) {
-      if (isWrite) {
-        this.#registerBankingModeSelect = value & 0x01;
-      }
-
-      return {};
-    }
-  }
-
-  #resolveMemoryRegion(address) {
-    let requestedRegion = Mbc1.#undefinedRegion;
-
-    for (const region of this.#memoryRegions) {
-      if (region.lowerBound <= address && address <= region.upperBound) {
-        requestedRegion = {
-          mappedAddress: address - region.lowerBound,
-          container: region.resolveContainer(),
-        }
-      }
-    }
-
-    return requestedRegion;
-  }
-
-  #handleWriteRamEnable(value) {
-    const lsNibble = value & 0x0F;
-    const shouldEnableRam = 0x0A === lsNibble;
-    // TODO: What changes when RAM is enabled/disabled
-  }
-
-  #handleWriteRomBankNumber(value) {
-    this.#romBankingRegister = value & 0x1F;
-
-    if (this.#romBankingRegister === 0x00) {
-      this.#romBankingRegister = 0x01;
-    }
-  }
 }
