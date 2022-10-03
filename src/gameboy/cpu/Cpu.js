@@ -150,6 +150,66 @@ export class Cpu {
 
   //#region Instruction set
 
+  //#region Misc/Control instructions
+
+  getMCInstructions() {
+    const implementationOf = this.#getMCImplementationByOpcode();
+    const instructions = [
+      new Instruction({ opcode: 0x00, cycles: 4, mnemonic: 'NOP'      , byteLength: 1, fn: implementationOf[0x00] }),
+      new Instruction({ opcode: 0x10, cycles: 4, mnemonic: 'STOP 0'   , byteLength: 2, fn: implementationOf[0x10] }),
+      new Instruction({ opcode: 0x76, cycles: 4, mnemonic: 'HALT'     , byteLength: 1, fn: implementationOf[0x76] }),
+      new Instruction({ opcode: 0xF3, cycles: 4, mnemonic: 'DI'       , byteLength: 1, fn: implementationOf[0xF3] }),
+      new Instruction({ opcode: 0xCB, cycles: 4, mnemonic: 'PREFIX CB', byteLength: 1, fn: implementationOf[0xCB] }),
+      new Instruction({ opcode: 0xFB, cycles: 4, mnemonic: 'EI'       , byteLength: 1, fn: implementationOf[0xFB] }),
+    ];
+
+    return instructions;
+  }
+
+  //#endregion
+
+  //#region Jump/Call instructions
+
+  getJCInstructions() {
+    const implementationOf = this.#getJCImplementationByOpcode();
+    const instructions = [
+      new Instruction({ opcode: 0x20, cycles: 8 , mnemonic: 'JR NZ, r8'   , byteLength: 2, fn: implementationOf[0x20] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0x30, cycles: 8 , mnemonic: 'JR NC, r8'   , byteLength: 2, fn: implementationOf[0x30] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0x18, cycles: 8 , mnemonic: 'JR r8'       , byteLength: 2, fn: implementationOf[0x18] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0x28, cycles: 8 , mnemonic: 'JR Z, r8'    , byteLength: 2, fn: implementationOf[0x28] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0x38, cycles: 8 , mnemonic: 'JR C, r8'    , byteLength: 2, fn: implementationOf[0x38] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0xC0, cycles: 8 , mnemonic: 'RET NZ'      , byteLength: 1, fn: implementationOf[0xC0] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xD0, cycles: 8 , mnemonic: 'RET NC'      , byteLength: 1, fn: implementationOf[0xD0] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xC2, cycles: 12, mnemonic: 'JP NZ, a16'  , byteLength: 3, fn: implementationOf[0xC2] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0xD2, cycles: 12, mnemonic: 'JP NC, a16'  , byteLength: 3, fn: implementationOf[0xD2] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0xC3, cycles: 16, mnemonic: 'JP a16'      , byteLength: 3, fn: implementationOf[0xC3] }), // Unconditional branching
+      new Instruction({ opcode: 0xC4, cycles: 12, mnemonic: 'CALL NZ, a16', byteLength: 3, fn: implementationOf[0xC4] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xD4, cycles: 12, mnemonic: 'CALL NC, a16', byteLength: 3, fn: implementationOf[0xD4] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xC7, cycles: 16, mnemonic: 'RST 00H'     , byteLength: 1, fn: implementationOf[0xC7] }), // Unconditional branching
+      new Instruction({ opcode: 0xD7, cycles: 16, mnemonic: 'RST 10H'     , byteLength: 1, fn: implementationOf[0xD7] }), // Unconditional branching
+      new Instruction({ opcode: 0xE7, cycles: 16, mnemonic: 'RST 20H'     , byteLength: 1, fn: implementationOf[0xE7] }), // Unconditional branching
+      new Instruction({ opcode: 0xF7, cycles: 16, mnemonic: 'RST 30H'     , byteLength: 1, fn: implementationOf[0xF7] }), // Unconditional branching
+      new Instruction({ opcode: 0xC8, cycles: 8 , mnemonic: 'RET Z'       , byteLength: 1, fn: implementationOf[0xC8] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xD8, cycles: 8 , mnemonic: 'RET C'       , byteLength: 1, fn: implementationOf[0xD8] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xC9, cycles: 16, mnemonic: 'RET'         , byteLength: 1, fn: implementationOf[0xC9] }), // Unconditional branching
+      new Instruction({ opcode: 0xD9, cycles: 16, mnemonic: 'RETI'        , byteLength: 1, fn: implementationOf[0xD9] }), // Unconditional branching
+      new Instruction({ opcode: 0xE9, cycles: 4 , mnemonic: 'RET (HL)'    , byteLength: 1, fn: implementationOf[0xE9] }), // Unconditional branching
+      new Instruction({ opcode: 0xCA, cycles: 12, mnemonic: 'JP Z, a16'   , byteLength: 3, fn: implementationOf[0xCA] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0xDA, cycles: 12, mnemonic: 'JP C, a16'   , byteLength: 3, fn: implementationOf[0xDA] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0xCC, cycles: 12, mnemonic: 'CALL Z, a16' , byteLength: 3, fn: implementationOf[0xCC] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xDC, cycles: 12, mnemonic: 'CALL C, a16' , byteLength: 3, fn: implementationOf[0xDC] }), // +12 cycles if branch is taken
+      new Instruction({ opcode: 0xCD, cycles: 24, mnemonic: 'CALL a16'    , byteLength: 3, fn: implementationOf[0xCD] }), // Unconditional branching
+      new Instruction({ opcode: 0xCF, cycles: 16, mnemonic: 'RST 08H'     , byteLength: 1, fn: implementationOf[0xCF] }), // Unconditional branching
+      new Instruction({ opcode: 0xDF, cycles: 16, mnemonic: 'RST 08H'     , byteLength: 1, fn: implementationOf[0xDF] }), // Unconditional branching
+      new Instruction({ opcode: 0xEF, cycles: 16, mnemonic: 'RST 08H'     , byteLength: 1, fn: implementationOf[0xEF] }), // Unconditional branching
+      new Instruction({ opcode: 0xFF, cycles: 16, mnemonic: 'RST 08H'     , byteLength: 1, fn: implementationOf[0xFF] }), // Unconditional branching
+    ];
+
+    return instructions;
+  }
+
+  //#endregion
+
   //#region 8-bit Load/Store/Move instructions
 
   #getLSM8bitInstructions() {
@@ -387,6 +447,29 @@ export class Cpu {
 
   //#endregion
 
+  //#region Undefined or blank instructions (these are empty in the opcode matrix https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
+
+  #getUBInstructions() {
+    const implementationOf = this.#getUBImplementationByOpcode();
+    const instructions = [
+      new Instruction({ opcode: 0xD3, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xD3] }),
+      new Instruction({ opcode: 0xE3, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xE3] }),
+      new Instruction({ opcode: 0xE4, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xE4] }),
+      new Instruction({ opcode: 0xF4, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xF4] }),
+      new Instruction({ opcode: 0xDB, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xDB] }),
+      new Instruction({ opcode: 0xEB, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xEB] }),
+      new Instruction({ opcode: 0xEC, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xEC] }),
+      new Instruction({ opcode: 0xFC, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xFC] }),
+      new Instruction({ opcode: 0xDD, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xDD] }),
+      new Instruction({ opcode: 0xED, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xED] }),
+      new Instruction({ opcode: 0xFD, cycles: 4, mnemonic: 'UB', byteLength: 1, fn: implementationOf[0xFD] }),
+    ];
+
+    return instructions;
+  }
+
+  //#endregion
+
   //#region Opcode implementation
 
   #getLSM8bitImplementationByOpcode() {
@@ -443,6 +526,30 @@ export class Cpu {
   }
 
   #getAL16bitImplementationByOpcode() {
+    return {
+      0x00: () => {
+
+      },
+    };
+  }
+
+  #getMCImplementationByOpcode() {
+    return {
+      0x00: () => {
+
+      },
+    };
+  }
+
+  #getJCImplementationByOpcode() {
+    return {
+      0x00: () => {
+
+      },
+    };
+  }
+
+  #getUBImplementationByOpcode() {
     return {
       0x00: () => {
 
