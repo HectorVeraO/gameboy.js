@@ -44,11 +44,16 @@ export class Cpu {
   }
 
   /**
-   * Fetches the value pointed by PC (does not advance the program counter)
-   * @returns {number} opcode or operand
+   * Fetches the value pointed by the PC an offset, without modifying the CPU's state
+   * @param {number} offset
+   * @returns 
    */
-  idle() {
-    return this.read(this.#PC);
+  peek(offset = 0) {
+    return this.read(this.PC + offset);
+  }
+
+  fetch() {
+    return this.read(this.#PC++);
   }
 
   /**
@@ -472,40 +477,147 @@ export class Cpu {
 
   //#region Opcode implementation
 
-  #getLSM8bitImplementationByOpcode() {
-    const algs = {};
-    algs.loadMemory = (address, value) => this.write(address, value);
-    algs.loadHram = (lowByte, value) => this.write(0xFF00 | lowByte, value);
-    algs.loadA = (value) => this.#A = value;
-    algs.loadB = (value) => this.#B = value;
-    algs.loadC = (value) => this.#C = value;
-    algs.loadD = (value) => this.#D = value;
-    algs.loadH = (value) => this.#H = value;
-    algs.loadE = (value) => this.#E = value;
-    algs.loadL = (value) => this.#L = value;
-    algs.loadF = (value) => this.#F = value;
-
-    algs.readHram = (lowByte) => this.read(0xFF00 | lowByte);
-    
-    algs.readBC = () => this.read(this.#BC);
-    algs.readDE = () => this.read(this.#DE);
-    algs.readHL = () => this.read(this.#HL);
-
-    algs.loadBC = (value) => this.write(this.#BC, value);
-    algs.loadDE = (value) => this.write(this.#DE, value);
-    algs.loadHL = (value) => this.write(this.#HL, value);
-
-    algs.decrementBC = () => this.#BC--;
-    algs.decrementDE = () => this.#DE--;
-    algs.decrementHL = () => this.#HL--;
-
-    algs.incrementBC = () => this.#BC++;
-    algs.incrementDE = () => this.#DE++;
-    algs.incrementHL = () => this.#HL++;
+  #getMCImplementationByOpcode() {
     return {
       0x00: () => {
 
       },
+    };
+  }
+
+  #getJCImplementationByOpcode() {
+    return {
+      0x00: () => {
+
+      },
+    };
+  }
+
+  #getLSM8bitImplementationByOpcode() {
+    const readMemory = (address) => this.read(address);
+    const loadMemory = (address, byte) => this.write(address, byte);
+
+    const operand = () => this.operand();
+    const operand16 = () => (operand() << 8) | operand();
+    
+    const readHRAM = (addressLowByte) => this.read(0xFF00 | addressLowByte);
+    const loadHRAM = (addressLowByte, byte) => this.write(0xFF00 | addressLowByte, byte)
+
+    const loadRegisterA = (byte) => this.#A = byte;
+    const loadRegisterB = (byte) => this.#B = byte;
+    const loadRegisterC = (byte) => this.#C = byte;
+    const loadRegisterD = (byte) => this.#D = byte;
+    const loadRegisterE = (byte) => this.#E = byte;
+    const loadRegisterH = (byte) => this.#H = byte;
+    const loadRegisterL = (byte) => this.#L = byte;
+
+    const loadMemoryPointedByBC = (byte) => this.write(this.#BC, byte);
+    const loadMemoryPointedByDE = (byte) => this.write(this.#DE, byte);
+    const loadMemoryPointedByHL = (byte) => this.write(this.#HL, byte);
+
+    const decrementHL = () => this.#HL--;
+    const incrementHL = () => this.#HL++;
+
+    return {
+      0x02: () => { loadMemoryPointedByBC( this.#A ); },
+      0x12: () => { loadMemoryPointedByDE( this.#A ); },
+      0x22: () => { loadMemoryPointedByHL( this.#A ); incrementHL(); },
+      0x32: () => { loadMemoryPointedByHL( this.#A ); decrementHL(); },
+
+      0x06: () => { loadRegisterB( operand() ); },
+      0x16: () => { loadRegisterD( operand() ); },
+      0x26: () => { loadRegisterH( operand() ); },
+      0x36: () => { loadMemoryPointedByHL( operand() ); },
+
+      0x0A: () => { loadRegisterA( readMemory(this.#BC) ); },
+      0x1A: () => { loadRegisterA( readMemory(this.#DE) ); },
+      0x2A: () => { loadRegisterA( readMemory(this.#HL) ); incrementHL() },
+      0x3A: () => { loadRegisterA( readMemory(this.#HL) ); decrementHL() },
+
+      0x0E: () => { loadRegisterC( operand() ); },
+      0x1E: () => { loadRegisterE( operand() ); },
+      0x2E: () => { loadRegisterL( operand() ); },
+      0x3E: () => { loadRegisterA( operand() ); },
+
+      0x40: () => { loadRegisterB( this.#B ); },
+      0x41: () => { loadRegisterB( this.#C ); },
+      0x42: () => { loadRegisterB( this.#D ); },
+      0x43: () => { loadRegisterB( this.#E ); },
+      0x44: () => { loadRegisterB( this.#H ); },
+      0x45: () => { loadRegisterB( this.#L ); },
+      0x46: () => { loadRegisterB( readMemory(this.#HL) ); },
+      0x47: () => { loadRegisterB( this.#A ); },
+
+      0x48: () => { loadRegisterC( this.#B ); },
+      0x49: () => { loadRegisterC( this.#C ); },
+      0x4A: () => { loadRegisterC( this.#D ); },
+      0x4B: () => { loadRegisterC( this.#E ); },
+      0x4C: () => { loadRegisterC( this.#H ); },
+      0x4D: () => { loadRegisterC( this.#L ); },
+      0x4E: () => { loadRegisterC( readMemory(this.#HL) ); },
+      0x4F: () => { loadRegisterC( this.#A ); },
+
+      0x50: () => { loadRegisterD( this.#B ); },
+      0x51: () => { loadRegisterD( this.#C ); },
+      0x52: () => { loadRegisterD( this.#D ); },
+      0x53: () => { loadRegisterD( this.#E ); },
+      0x54: () => { loadRegisterD( this.#H ); },
+      0x55: () => { loadRegisterD( this.#L ); },
+      0x56: () => { loadRegisterD( readMemory(this.#HL) ); },
+      0x57: () => { loadRegisterD( this.#A ); },
+
+      0x58: () => { loadRegisterE( this.#B ); },
+      0x59: () => { loadRegisterE( this.#C ); },
+      0x5A: () => { loadRegisterE( this.#D ); },
+      0x5B: () => { loadRegisterE( this.#E ); },
+      0x5C: () => { loadRegisterE( this.#H ); },
+      0x5D: () => { loadRegisterE( this.#L ); },
+      0x5E: () => { loadRegisterE( readMemory(this.#HL) ); },
+      0x5F: () => { loadRegisterE( this.#A ); },
+
+      0x60: () => { loadRegisterH( this.#B ); },
+      0x61: () => { loadRegisterH( this.#C ); },
+      0x62: () => { loadRegisterH( this.#D ); },
+      0x63: () => { loadRegisterH( this.#E ); },
+      0x64: () => { loadRegisterH( this.#H ); },
+      0x65: () => { loadRegisterH( this.#L ); },
+      0x66: () => { loadRegisterH( readMemory(this.#HL) ); },
+      0x67: () => { loadRegisterH( this.#A ); },
+
+      0x68: () => { loadRegisterL( this.#B ); },
+      0x69: () => { loadRegisterL( this.#C ); },
+      0x6A: () => { loadRegisterL( this.#D ); },
+      0x6B: () => { loadRegisterL( this.#E ); },
+      0x6C: () => { loadRegisterL( this.#H ); },
+      0x6D: () => { loadRegisterL( this.#L ); },
+      0x6E: () => { loadRegisterL( readMemory(this.#HL) ); },
+      0x6F: () => { loadRegisterL( this.#A ); },
+
+      0x70: () => { loadMemoryPointedByHL( this.#B ); },
+      0x71: () => { loadMemoryPointedByHL( this.#C ); },
+      0x72: () => { loadMemoryPointedByHL( this.#D ); },
+      0x73: () => { loadMemoryPointedByHL( this.#E ); },
+      0x74: () => { loadMemoryPointedByHL( this.#H ); },
+      0x75: () => { loadMemoryPointedByHL( this.#L ); },
+      0x77: () => { loadMemoryPointedByHL( this.#A ); },
+
+      0x78: () => { loadRegisterA( this.#B ); },
+      0x79: () => { loadRegisterA( this.#C ); },
+      0x7A: () => { loadRegisterA( this.#D ); },
+      0x7B: () => { loadRegisterA( this.#E ); },
+      0x7C: () => { loadRegisterA( this.#H ); },
+      0x7D: () => { loadRegisterA( this.#L ); },
+      0x7E: () => { loadRegisterA( readMemory(this.#HL) ); },
+      0x7F: () => { loadRegisterA( this.#A ); },
+
+      0xE0: () => { loadHRAM( operand(), this.#A ); },
+      0xF0: () => { loadRegisterA( readHRAM(operand()) ); },
+
+      0xE2: () => { loadHRAM( this.#C, this.#A ) },
+      0xF2: () => { loadRegisterA( readHRAM(this.#C) ) },
+
+      0xEA: () => { loadMemory( operand16(), this.#A )  },
+      0xFA: () => { loadRegisterA( readMemory(operand16()) ) },
     };
   }
 
@@ -526,22 +638,6 @@ export class Cpu {
   }
 
   #getAL16bitImplementationByOpcode() {
-    return {
-      0x00: () => {
-
-      },
-    };
-  }
-
-  #getMCImplementationByOpcode() {
-    return {
-      0x00: () => {
-
-      },
-    };
-  }
-
-  #getJCImplementationByOpcode() {
     return {
       0x00: () => {
 
