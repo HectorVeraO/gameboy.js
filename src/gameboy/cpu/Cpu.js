@@ -132,24 +132,44 @@ export class Cpu {
   }
 
   set #AF(word) {
-    this.#A = word & 0xFF00;
+    this.#A = (word & 0xFF00) >>> 8;
     this.#F = word & 0x00FF;
   }
 
   set #BC(word) {
-    this.#B = word & 0xFF00;
+    this.#B = (word & 0xFF00) >>> 8;
     this.#C = word & 0x00FF;
   }
 
   set #DE(word) {
-    this.#D = word & 0xFF00;
+    this.#D = (word & 0xFF00) >>> 8;
     this.#E = word & 0x00FF;
   }
 
   set #HL(word) {
-    this.#H = word & 0xFF00;
+    this.#H = (word & 0xFF00) >>> 8;
     this.#L = word & 0x00FF;
   }
+
+  //#endregion
+
+  //#region Stack operations
+
+  #push(word) {
+    const highByte = (word & 0xFF00) >>> 8; // The GameBoy's CPU behaves as a little endian CPU when dealing
+    this.write(--this.#SP, highByte);       // with multi-byte data, thus we need to push bytes onto the stack
+                                            // in a way that allows us to read them back in an increasing
+    const lowByte = word & 0x00FF;          // order of significance.
+    this.write(--this.#SP, lowByte);        // (Remember that a stack follows the LIFO principle)
+  }
+
+  #pop() {
+    const lowByte = this.read(this.#SP++);
+    const highByte = this.read(this.#SP++);
+
+    return (highByte << 8) | lowByte;
+  }
+
 
   //#endregion
 
@@ -157,7 +177,7 @@ export class Cpu {
 
   //#region Misc/Control instructions
 
-  getMCInstructions() {
+  #getMCInstructions() {
     const implementationOf = this.#getMCImplementationByOpcode();
     const instructions = [
       new Instruction({ opcode: 0x00, cycles: 4, mnemonic: 'NOP'      , byteLength: 1, fn: implementationOf[0x00] }),
@@ -175,7 +195,7 @@ export class Cpu {
 
   //#region Jump/Call instructions
 
-  getJCInstructions() {
+  #getJCInstructions() {
     const implementationOf = this.#getJCImplementationByOpcode();
     const instructions = [
       new Instruction({ opcode: 0x20, cycles: 8 , mnemonic: 'JR NZ, r8'   , byteLength: 2, fn: implementationOf[0x20] }), //  +4 cycles if branch is taken
@@ -622,10 +642,37 @@ export class Cpu {
   }
 
   #getLSM16bitImplementationByOpcode() {
-    return {
-      0x00: () => {
+    const loadMemory = (address, byte) => this.write(address, byte);
 
-      },
+    const operand = () => this.operand();
+    const operand16 = () => (operand() << 8) | operand();
+
+    const loadRegisterBC = (word) => this.#BC = word;
+    const loadRegisterDE = (word) => this.#DE = word;
+    const loadRegisterHL = (word) => this.#HL = word;
+    const loadRegisterSP = (word) => this.#SP = word;
+    const loadRegisterAF = (word) => this.#AF = word;
+
+    const popStack = () => this.#pop();
+    const pushStack = (word) => this.pushStack(word);
+
+    return {
+      0x01: () => { loadRegisterBC( operand16() ) },
+      0x11: () => { loadRegisterDE( operand16() ) },
+      0x21: () => { loadRegisterHL( operand16() ) },
+      0x31: () => { loadRegisterSP( operand16() ) },
+
+      0x08: () => { loadMemory( operand16(), this.#SP ) },
+
+      0xC1: () => { loadRegisterBC( popStack() ); },
+      0xD1: () => { loadRegisterDE( popStack() ); },
+      0xE1: () => { loadRegisterHL( popStack() ); },
+      0xF1: () => { loadRegisterAF( popStack() ); },
+
+      0xC5: () => { pushStack( this.#BC ); },
+      0xD5: () => { pushStack( this.#DE ); },
+      0xE5: () => { pushStack( this.#HL ); },
+      0xF5: () => { pushStack( this.#AF ); },
     };
   }
 
