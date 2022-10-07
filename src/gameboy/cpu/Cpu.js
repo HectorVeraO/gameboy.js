@@ -698,15 +698,19 @@ export class Cpu {
       0xC1: () => { loadRegisterBC( popStack() ); },
       0xD1: () => { loadRegisterDE( popStack() ); },
       0xE1: () => { loadRegisterHL( popStack() ); },
-      0xF1: () => { loadRegisterAF( popStack() ); },
+      0xF1: () => { loadRegisterAF( popStack() ); }, // TODO: Handle flags
 
       0xC5: () => { pushStack( this.#BC ); },
       0xD5: () => { pushStack( this.#DE ); },
       0xE5: () => { pushStack( this.#HL ); },
       0xF5: () => { pushStack( this.#AF ); },
+
+      0xF8: () => { null; }, // TODO: Pending implementation, and handle flags
+      0xF9: () => { null; }, // TODO: Pending implementation
     };
   }
 
+  // TODO: Handle flags
   #getAL8bitImplementationByOpcode() {
     const readMemory = (address) => this.read(address);
     const loadMemory = (address, byte) => this.write(address, byte);
