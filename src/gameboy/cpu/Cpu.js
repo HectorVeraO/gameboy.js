@@ -1,7 +1,7 @@
 import { assertType } from "@common/Control";
 import { hexStr } from "@common/Number";
+import { Uint8 } from "@common/Uint8";
 import { Instruction } from "./Instruction";
-import { Register8 } from "./registers/Register8";
 import { RegisterF } from "./registers/RegisterF";
 
 /**
@@ -80,9 +80,23 @@ export class Cpu {
   //#region State (not from spec)
 
   #cycleCount;
-
   #cyclesLeft;
 
+  #isHalted;  // TODO: Implement behavior
+  #isStopped; // TODO: Implement behavior
+
+  //#endregion
+
+  //#region Spec flags, https://gbdev.io/pandocs/Interrupts.html#interrupts
+
+  /** Interrupt master enable flag (write only) */
+  #IME;
+
+  /** Interrupt enable */
+  #IE;
+
+  /** Interrupt flag */
+  #IF;
 
   //#endregion
 
@@ -90,13 +104,13 @@ export class Cpu {
 
   //#region 8-bit registers
 
-  #A = new Register8();
-  #B = new Register8();
-  #C = new Register8();
-  #D = new Register8();
-  #E = new Register8();
-  #H = new Register8();
-  #L = new Register8();
+  #A = new Uint8();
+  #B = new Uint8();
+  #C = new Uint8();
+  #D = new Uint8();
+  #E = new Uint8();
+  #H = new Uint8();
+  #L = new Uint8();
   #F = new RegisterF();
 
   //#endregion
@@ -498,10 +512,27 @@ export class Cpu {
   //#region Opcode implementation
 
   #getMCImplementationByOpcode() {
-    return {
-      0x00: () => {
+    const noop = () => {};
+    
+    const operand = () => this.operand();
+    
+    const halt = () => this.#isHalted = true;
+    
+    const stop = (byte) => this.#isStopped = byte === 0x00;
 
-      },
+    const enableInterrupts = () => this.#acceptsInterrupts = true;
+    const disableInterrupts = () => this.#acceptsInterrupts = false;
+
+    return {
+      0x00: () => { noop(); },
+      0x01: () => { stop( operand() ); },
+
+      0x76: () => { halt(); },
+
+      0xF3: () => { disableInterrupts(); },
+
+      0xCB: () => { noop() },
+      0xFB: () => { enableInterrupts()},
     };
   }
 

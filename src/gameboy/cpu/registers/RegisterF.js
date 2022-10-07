@@ -1,6 +1,7 @@
-import { Register8 } from "./Register8";
+import { Uint8 } from "@common/Uint8";
 
-export class RegisterF extends Register8 {
+export class RegisterF extends Uint8 {
+  
   constructor(value) {
     super(value);
   }

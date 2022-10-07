@@ -1,6 +1,6 @@
-export class Register8 {
+export class Uint8 {
   constructor(value = 0x00) {
-    this.#value = value;
+    this.#value = value & 0xFF;
   }
 
   set(value) {
