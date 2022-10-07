@@ -1,6 +1,6 @@
 export class Uint8 {
   constructor(value = 0x00) {
-    this.#value = value & 0xFF;
+    this.set(value);
   }
 
   set(value) {
@@ -9,6 +9,15 @@ export class Uint8 {
 
   bit(position) {
     return (this >> position) & 0x01;
+  }
+
+  setBit(position, value = 1) {
+    const bit = value ? 1 : 0;
+    this.#value ^= (-bit ^ this.#value) & (1 << position);
+  }
+
+  clearBit(position) {
+    this.#value &= ~(1 << position);
   }
 
   valueOf() {
