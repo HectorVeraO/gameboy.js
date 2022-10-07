@@ -708,10 +708,69 @@ export class Cpu {
   }
 
   #getAL8bitImplementationByOpcode() {
-    return {
-      0x00: () => {
+    const readMemory = (address) => this.read(address);
+    const loadMemory = (address, byte) => this.write(address, byte);
 
-      },
+    const operand = () => this.operand();
+    const operand16 = () => (operand() << 8) | operand();
+    
+    const incrementA = () => this.#A++;
+    const incrementB = () => this.#B++;
+    const incrementC = () => this.#C++;
+    const incrementD = () => this.#D++;
+    const incrementE = () => this.#E++;
+    const incrementH = () => this.#H++;
+    const incrementL = () => this.#L++;
+    const incrementF = () => this.#F++;
+
+    const decrementA = () => this.#A++;
+    const decrementB = () => this.#B++;
+    const decrementC = () => this.#C++;
+    const decrementD = () => this.#D++;
+    const decrementE = () => this.#E++;
+    const decrementH = () => this.#H++;
+    const decrementL = () => this.#L++;
+    const decrementF = () => this.#F++;
+
+    /** Get binary coded decimal representation of a byte */
+    const nibble = (value, position) => (value >>> (4 * position)) & 0xF;
+    const applyDecimalCorrectionForA = () => {
+      const MAX_UINT4 = 0xF;
+      const MAX_UINT4_BCD = 0x9;
+      const BINARY_TO_BCD_GAP = MAX_UINT4 - MAX_UINT4_BCD;
+
+      let bcdByte = this.#A;
+
+      const lowNibble = nibble(bcdByte, 0);
+      if (this.#F.H || lowNibble > MAX_UINT4_BCD) {
+        bcdByte += BINARY_TO_BCD_GAP;
+      }
+
+      const highNibble = nibble(bcdByte, 1);
+      if (this.#F.C || highNibble > MAX_UINT4_BCD) {
+        bcdByte += BINARY_TO_BCD_GAP;
+      }
+
+      this.#F.Z = bcdByte === 0;
+      this.#F.H = 0;
+      this.#F.C = nibble(bcdByte, 1) > MAX_UINT4_BCD; // Set C if there is a decimal carry
+
+      this.#A = bcdByte;
+    };
+
+    return {
+      0x04: () => { incrementB(); },
+      0x14: () => { incrementD(); },
+      0x24: () => { incrementH(); },
+      0x34: () => { loadMemory( this.#HL, readMemory(this.#HL) + 1 ); },
+
+      0x05: () => { decrementB(); },
+      0x15: () => { decrementD(); },
+      0x25: () => { decrementH(); },
+      0x35: () => { loadMemory( this.#HL, readMemory(this.#HL) - 1 ); },
+
+      0x27: () => { applyDecimalCorrectionForA(); },
+      0x37: () => { this.#F.Cy = 1; this.#F.N = 0; this.#F.H = 0; },
     };
   }
 
