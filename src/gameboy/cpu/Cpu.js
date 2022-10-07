@@ -520,8 +520,8 @@ export class Cpu {
     
     const stop = (byte) => this.#isStopped = byte === 0x00;
 
-    const enableInterrupts = () => this.#acceptsInterrupts = true;
-    const disableInterrupts = () => this.#acceptsInterrupts = false;
+    const enableInterrupts = () => this.#IME = true;
+    const disableInterrupts = () => this.#IME = false;
 
     return {
       0x00: () => { noop(); },
