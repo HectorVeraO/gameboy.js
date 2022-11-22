@@ -718,14 +718,14 @@ export class Cpu {
     const operand = () => this.operand();
     const operand16 = () => (operand() << 8) | operand();
     
-    const incrementA = () => this.#A++;
-    const incrementB = () => this.#B++;
-    const incrementC = () => this.#C++;
-    const incrementD = () => this.#D++;
-    const incrementE = () => this.#E++;
-    const incrementH = () => this.#H++;
-    const incrementL = () => this.#L++;
-    const incrementF = () => this.#F++;
+    const incrementA = () => { const previous = this.#A++; this.#F.Z = this.#A === 0; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF)); };
+    const incrementB = () => { const previous = this.#B++; this.#F.Z = this.#B === 0; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF)); };
+    const incrementC = () => { const previous = this.#C++; this.#F.Z = this.#C === 0; this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF)); };
+    const incrementD = () => { const previous = this.#D++; this.#F.Z = this.#D === 0; this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF)); };
+    const incrementE = () => { const previous = this.#E++; this.#F.Z = this.#E === 0; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF)); };
+    const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H === 0; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF)); };
+    const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L === 0; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF)); };
+    const incrementF = () => { const previous = this.#F++; this.#F.Z = this.#F === 0; this.#F.H = ((this.#F & 0xFF) > (previous & 0xFF)); };
 
     const decrementA = () => this.#A++;
     const decrementB = () => this.#B++;
@@ -759,6 +759,26 @@ export class Cpu {
       this.#A = bcdByte;
     };
 
+
+    const setCarryFlag = () => {
+      this.#F.Cy = 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = 0;
+    };
+
+    const complementA = () => {
+      this.#A ^= 0xFF;
+      this.#F.N = 1;
+      this.#F.H = 1;
+    };
+
+    const complementCarryFlag = () => {
+      this.#F.Cy ^= 1;
+      this.#F.N = 0;
+      this.#F.H = 0;
+    }
+
     return {
       0x04: () => { incrementB(); },
       0x14: () => { incrementD(); },
@@ -771,7 +791,20 @@ export class Cpu {
       0x35: () => { loadMemory( this.#HL, readMemory(this.#HL) - 1 ); },
 
       0x27: () => { applyDecimalCorrectionForA(); },
-      0x37: () => { this.#F.Cy = 1; this.#F.N = 0; this.#F.H = 0; },
+      0x37: () => { setCarryFlag() },
+
+      0x0C: () => { incrementC(); },
+      0x1C: () => { incrementE(); },
+      0x2C: () => { incrementL(); },
+      0x3C: () => { incrementA(); },
+
+      0x0D: () => { decrementC(); },
+      0x1D: () => { decrementE(); },
+      0x2D: () => { decrementL(); },
+      0x3D: () => { decrementA(); },
+
+      0x2F: () => { complementA(); },
+      0x3F: () => { complementCarryFlag(); },
     };
   }
 
