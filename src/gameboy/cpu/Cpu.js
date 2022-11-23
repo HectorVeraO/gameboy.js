@@ -736,6 +736,10 @@ export class Cpu {
     const decrementL = () => this.#L++;
     const decrementF = () => this.#F++;
 
+    //  >> arithmetic right shift, e.g.
+
+    // >>> logical right shift, e.g. 0xFF
+
     const nibble = (value, position) => (value >>> (4 * position)) & 0xF;
     const applyDecimalCorrectionForA = () => {
       const MAX_UINT4 = 0xF;
@@ -744,6 +748,7 @@ export class Cpu {
 
       let bcdByte = this.#A;
 
+      // bcdByte = 0b1011_1101, nibble(0b1011_1101, 1) = 0b1011,
       if (this.#F.H || nibble(bcdByte, 0) > MAX_UINT4_BCD) {
         bcdByte += BINARY_TO_BCD_GAP;
       }
@@ -777,7 +782,46 @@ export class Cpu {
       this.#F.Cy ^= 1;
       this.#F.N = 0;
       this.#F.H = 0;
-    }
+    };
+
+    const hasHalfCarry = (x, y) => (nibble(x, 0) + nibble(y, 0)) & 0x10;
+
+    const hasCarry = (x, y) => (x + y) & 0x100;
+
+    const register = {
+      A: {
+        add: (byte) => {    
+          const oldA = this.#A;
+          this.#A += byte;
+          this.#F.Z = this.#A === 0;
+          this.#F.N = 0;
+          this.#F.H = hasHalfCarry(oldA, byte);
+          this.#F.C = hasCarry(oldA, byte);
+        },
+        sub: (byte) => {    
+          const oldA = this.#A;
+          this.#A -= byte;
+          this.#F.Z = this.#A === 0;
+          this.#F.N = 1;
+          this.#F.H = hasHalfCarry(oldA, byte);
+          this.#F.C = hasCarry(oldA, byte);
+        },
+        and: (byte) => {    
+          this.#A &= byte;
+          this.#F.Z = this.#A === 0;
+          this.#F.N = 0;
+          this.#F.H = 1;
+          this.#F.C = 0;
+        },
+        or: (byte) => {    
+          this.#A |= byte;
+          this.#F.Z = this.#A === 0;
+          this.#F.N = 0;
+          this.#F.H = 0;
+          this.#F.C = 0;
+        },
+      },
+    };
 
     return {
       0x04: () => { incrementB(); },
@@ -805,6 +849,41 @@ export class Cpu {
 
       0x2F: () => { complementA(); },
       0x3F: () => { complementCarryFlag(); },
+
+      0x80: () => { register.A.add(this.#B); },
+      0x90: () => { register.A.sub(this.#B); },
+      0xA0: () => { register.A.and(this.#B); },
+      0xB0: () => { register.A.or(this.#B); },
+
+      0x81: () => { register.A.add(this.#C); },
+      0x91: () => { register.A.sub(this.#C); },
+      0xA1: () => { register.A.and(this.#C); },
+      0xB1: () => { register.A.or(this.#C); },
+
+      0x82: () => { register.A.add(this.#D); },
+      0x92: () => { register.A.sub(this.#D); },
+      0xA2: () => { register.A.and(this.#D); },
+      0xB2: () => { register.A.or(this.#D); },
+
+      0x83: () => { register.A.add(this.#E); },
+      0x93: () => { register.A.sub(this.#E); },
+      0xA3: () => { register.A.and(this.#E); },
+      0xB3: () => { register.A.or(this.#E); },
+
+      0x84: () => { register.A.add(this.#H); },
+      0x94: () => { register.A.sub(this.#H); },
+      0xA4: () => { register.A.and(this.#H); },
+      0xB4: () => { register.A.or(this.#H); },
+
+      0x85: () => { register.A.add(this.#L); },
+      0x95: () => { register.A.sub(this.#L); },
+      0xA5: () => { register.A.and(this.#L); },
+      0xB5: () => { register.A.or(this.#L); },
+
+      0x86: () => { register.A.add( readMemory(this.#HL) ); },
+      0x96: () => { register.A.sub( readMemory(this.#HL) ); },
+      0xA6: () => { register.A.and( readMemory(this.#HL) ); },
+      0xB6: () => { register.A.or( readMemory(this.#HL) ); },
     };
   }
 
