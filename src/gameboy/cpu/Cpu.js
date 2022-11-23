@@ -736,10 +736,6 @@ export class Cpu {
     const decrementL = () => this.#L++;
     const decrementF = () => this.#F++;
 
-    //  >> arithmetic right shift, e.g.
-
-    // >>> logical right shift, e.g. 0xFF
-
     const nibble = (value, position) => (value >>> (4 * position)) & 0xF;
     const applyDecimalCorrectionForA = () => {
       const MAX_UINT4 = 0xF;
