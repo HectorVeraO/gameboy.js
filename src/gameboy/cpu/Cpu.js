@@ -816,6 +816,22 @@ export class Cpu {
           this.#F.H = 0;
           this.#F.C = 0;
         },
+        adc: (byte) => register.A.add(byte + this.#F.C),
+        sbc: (byte) => register.A.sub(byte - this.#F.C),
+        xor: (byte) => {
+          this.#A ^= byte;
+          this.#F.Z = this.#A === 0;
+          this.#F.N = 0;
+          this.#F.H = 0;
+          this.#F.C = 0;
+        },
+        cp: (byte) => {
+          const difference = this.#A - byte;
+          this.#F.Z = difference === 0;
+          this.#F.N = 1;
+          this.#F.H = hasHalfCarry(this.#A, byte);
+          this.#F.C = hasCarry(this.#A, byte);
+        },
       },
     };
 
@@ -880,6 +896,56 @@ export class Cpu {
       0x96: () => { register.A.sub( readMemory(this.#HL) ); },
       0xA6: () => { register.A.and( readMemory(this.#HL) ); },
       0xB6: () => { register.A.or( readMemory(this.#HL) ); },
+
+      0x88: () => { register.A.adc(this.#B); },
+      0x98: () => { register.A.sbc(this.#B); },
+      0xA8: () => { register.A.xor(this.#B); },
+      0xB8: () => { register.A.cp(this.#B); },
+
+      0x89: () => { register.A.adc(this.#C); },
+      0x99: () => { register.A.sbc(this.#C); },
+      0xA9: () => { register.A.xor(this.#C); },
+      0xB9: () => { register.A.cp(this.#C); },
+
+      0x8A: () => { register.A.adc(this.#D); },
+      0x9A: () => { register.A.sbc(this.#D); },
+      0xAA: () => { register.A.xor(this.#D); },
+      0xBA: () => { register.A.cp(this.#D); },
+
+      0x8B: () => { register.A.adc(this.#E); },
+      0x9B: () => { register.A.sbc(this.#E); },
+      0xAB: () => { register.A.xor(this.#E); },
+      0xBB: () => { register.A.cp(this.#E); },
+
+      0x8C: () => { register.A.adc(this.#H); },
+      0x9C: () => { register.A.sbc(this.#H); },
+      0xAC: () => { register.A.xor(this.#H); },
+      0xBC: () => { register.A.cp(this.#H); },
+
+      0x8D: () => { register.A.adc(this.#L); },
+      0x9D: () => { register.A.sbc(this.#L); },
+      0xAD: () => { register.A.xor(this.#L); },
+      0xBD: () => { register.A.cp(this.#L); },
+
+      0x8E: () => { register.A.adc( readMemory(this.#HL) ); },
+      0x9E: () => { register.A.sbc( readMemory(this.#HL) ); },
+      0xAE: () => { register.A.xor( readMemory(this.#HL) ); },
+      0xBE: () => { register.A.cp( readMemory(this.#HL) ); },
+
+      0x8F: () => { register.A.adc(this.#A); },
+      0x9F: () => { register.A.sbc(this.#A); },
+      0xAF: () => { register.A.xor(this.#A); },
+      0xBF: () => { register.A.cp(this.#A); },
+
+      0xC6: () => { register.A.add( operand() ); },
+      0xD6: () => { register.A.sub( operand() ); },
+      0xE6: () => { register.A.and( operand() ); },
+      0xF6: () => { register.A.or( operand() ); },
+
+      0xCE: () => { register.A.adc( operand() ); },
+      0xDE: () => { register.A.sbc( operand() ); },
+      0xEE: () => { register.A.xor( operand() ); },
+      0xFE: () => { register.A.cp( operand() ); },
     };
   }
 
