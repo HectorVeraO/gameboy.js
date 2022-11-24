@@ -950,10 +950,49 @@ export class Cpu {
   }
 
   #getAL16bitImplementationByOpcode() {
-    return {
-      0x00: () => {
+    const hasHalfCarry16 = (x, y) => ((x & 0xFFF) + (y & 0xFFF)) & 0x1000;
 
+    const hasCarry16 = (x, y) => (x + y) & 0x10000;
+
+    const register = {
+      HL: {
+        add: (word) => {
+          const oldHL = this.#HL;
+          this.#HL += word;
+          this.#F.N = 0;
+          this.#F.H = hasHalfCarry16(oldHL, word);
+          this.#F.C = hasCarry16(oldHL, word);
+        },
       },
+      SP: {
+        add: (word) => {
+          const oldSP = this.#SP;
+          this.#SP += word;
+          this.#F.Z = 0;
+          this.#F.N = 0;
+          this.#F.H = hasHalfCarry16(oldSP, word);
+          this.#F.C = hasCarry16(oldSP, word);
+        },
+      },
+    };
+
+    return {
+      0x03: () => { this.#BC += 1; },
+      0x13: () => { this.#DE += 1; },
+      0x23: () => { this.#HL += 1; },
+      0x33: () => { this.#SP += 1; },
+
+      0x09: () => { register.HL.add(this.#BC); },
+      0x19: () => { register.HL.add(this.#DE); },
+      0x29: () => { register.HL.add(this.#HL); },
+      0x39: () => { register.HL.add(this.#SP); },
+
+      0x0B: () => { this.#BC -= 1; },
+      0x1B: () => { this.#DE -= 1; },
+      0x2B: () => { this.#HL -= 1; },
+      0x3B: () => { this.#SP -= 1; },
+
+      0xE8: () => { register.SP.add(null) },
     };
   }
 
