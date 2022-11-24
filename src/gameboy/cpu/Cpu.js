@@ -744,7 +744,6 @@ export class Cpu {
 
       let bcdByte = this.#A;
 
-      // bcdByte = 0b1011_1101, nibble(0b1011_1101, 1) = 0b1011,
       if (this.#F.H || nibble(bcdByte, 0) > MAX_UINT4_BCD) {
         bcdByte += BINARY_TO_BCD_GAP;
       }
@@ -950,6 +949,8 @@ export class Cpu {
   }
 
   #getAL16bitImplementationByOpcode() {
+    const operand = () => this.operand();
+
     const hasHalfCarry16 = (x, y) => ((x & 0xFFF) + (y & 0xFFF)) & 0x1000;
 
     const hasCarry16 = (x, y) => (x + y) & 0x10000;
@@ -992,15 +993,27 @@ export class Cpu {
       0x2B: () => { this.#HL -= 1; },
       0x3B: () => { this.#SP -= 1; },
 
-      0xE8: () => { register.SP.add(null) },
+      0xE8: () => { register.SP.add( operand() ); },
     };
   }
 
   #getUBImplementationByOpcode() {
     return {
-      0x00: () => {
+      0xD3: () => {},
+      0xE3: () => {},
 
-      },
+      0xE4: () => {},
+      0xF4: () => {},
+
+      0xDB: () => {},
+      0xEB: () => {},
+
+      0xEC: () => {},
+      0xFC: () => {},
+
+      0xDD: () => {},
+      0xED: () => {},
+      0xFD: () => {},
     };
   }
 
