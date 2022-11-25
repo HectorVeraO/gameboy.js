@@ -1336,21 +1336,21 @@ export class Cpu {
     const ub = () => console.log('🥴');
 
     return {
-      0xD3: () => { ub(); },
-      0xE3: () => { ub(); },
+      0xD3: ub,
+      0xE3: ub,
 
-      0xE4: () => { ub(); },
-      0xF4: () => { ub(); },
+      0xE4: ub,
+      0xF4: ub,
 
-      0xDB: () => { ub(); },
-      0xEB: () => { ub(); },
+      0xDB: ub,
+      0xEB: ub,
 
-      0xEC: () => { ub(); },
-      0xFC: () => { ub(); },
+      0xEC: ub,
+      0xFC: ub,
 
-      0xDD: () => { ub(); },
-      0xED: () => { ub(); },
-      0xFD: () => { ub(); },
+      0xDD: ub,
+      0xED: ub,
+      0xFD: ub,
     };
   }
 
