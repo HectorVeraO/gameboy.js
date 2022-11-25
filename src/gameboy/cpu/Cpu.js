@@ -509,6 +509,23 @@ export class Cpu {
 
   //#endregion
 
+  //#region 8-bit rotations
+
+  #getR8bitOperations() {
+    const implementationOf = this.#getR8bitImplementationByOpcode();
+    const instructions = [
+      new Instruction({ opcode: 0x07, cycles: 4, mnemonic: 'RLCA', byteLength: 1, fn: implementationOf[0x07] }),
+      new Instruction({ opcode: 0x17, cycles: 4, mnemonic: 'RLA' , byteLength: 1, fn: implementationOf[0x17] }),
+
+      new Instruction({ opcode: 0x0F, cycles: 4, mnemonic: 'RRCA', byteLength: 1, fn: implementationOf[0x0F] }),
+      new Instruction({ opcode: 0x1F, cycles: 4, mnemonic: 'RRA' , byteLength: 1, fn: implementationOf[0x1F] }),
+    ];
+
+    return instructions;
+  }
+
+  //#endregion
+
   //#region Prefix CB operations for 8-bit rotations, shifts and bit instructions
 
   #getPrefixCBOperations() {
@@ -1265,23 +1282,75 @@ export class Cpu {
     };
   }
 
-  #getUBImplementationByOpcode() {
+  #getR8bitImplementationByOpcode() {
+    const register = {
+      A: {
+        rlc: () => {
+          const high = (this.#A << 1);
+          const low = (this.#A >>> 7);
+          this.#A = (high & 0xFF) | (low & 1);
+          this.#F.Z = 0;
+          this.#F.N = 0;
+          this.#F.H = 0;
+          this.#F.C = high & 0x100;
+        },
+        rl: () => {
+          const high = (this.#A << 1);
+          this.#A = (high & 0xFF) | (this.C & 1);
+          this.#F.Z = 0;
+          this.#F.N = 0;
+          this.#F.H = 0;
+          this.#F.C = high & 0x100;
+        },
+        rrc: () => {
+          const high = (this.#A << 7);
+          const low = (this.#A >>> 1);
+          this.#A = (high & 0x80) | (low & 0xFF);
+          this.#F.Z = 0;
+          this.#F.N = 0;
+          this.#F.H = 0;
+          this.#F.C = high & 0x80;
+        },
+        rr: () => {
+          const low = this.#A >>> 1;
+          const carry = this.#A & 1;
+          this.#A = ((this.#F.C << 7) & 0x80) | (low & 0xFF);
+          this.#F.Z = 0;
+          this.#F.N = 0;
+          this.#F.H = 0;
+          this.#F.C = carry;
+        },
+      },
+    };
+
     return {
-      0xD3: () => {},
-      0xE3: () => {},
+      0x07: () => { register.A.rlc(); },
+      0x17: () => { register.A.rl(); },
 
-      0xE4: () => {},
-      0xF4: () => {},
+      0x0F: () => { register.A.rrc(); },
+      0x1F: () => { register.A.rr(); },
+    };
+  }
 
-      0xDB: () => {},
-      0xEB: () => {},
+  #getUBImplementationByOpcode() {
+    const ub = () => console.log('🥴');
 
-      0xEC: () => {},
-      0xFC: () => {},
+    return {
+      0xD3: () => { ub(); },
+      0xE3: () => { ub(); },
 
-      0xDD: () => {},
-      0xED: () => {},
-      0xFD: () => {},
+      0xE4: () => { ub(); },
+      0xF4: () => { ub(); },
+
+      0xDB: () => { ub(); },
+      0xEB: () => { ub(); },
+
+      0xEC: () => { ub(); },
+      0xFC: () => { ub(); },
+
+      0xDD: () => { ub(); },
+      0xED: () => { ub(); },
+      0xFD: () => { ub(); },
     };
   }
 
