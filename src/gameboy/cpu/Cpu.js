@@ -1355,8 +1355,476 @@ export class Cpu {
   }
 
   #getPrefixCBOperationByOpcode() {
+    const rlc = (byte) => {
+      const rotated = ((byte << 1) & 0xFF) | ((byte >>> 7) & 1);
+      this.#F.Z = rotated === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = byte & 0x80;
+      return rotated;
+    };
+
+    const rrc = (byte) => {
+      const rotated = ((byte << 7) & 0x80) | ((byte >>> 1) & 0xFF);
+      this.#F.Z = rotated === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = byte & 1;
+    };
+
+    const rl = (byte) => {
+      const rotated = ((byte << 1) & 0xFF) | (this.#F.C & 1);
+      this.#F.Z = rotated === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = byte & 0x80;
+    };
+
+    const rr = (byte) => {
+      const rotated = ((this.#F.C << 7) & 0x80) | ((byte >>> 7) & 0xFF);
+      this.#F.Z = rotated === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = byte & 1;
+    };
+
+    const sla = (byte) => {
+      const shifted = (byte << 1) & 0xFF;
+      this.#F.Z = shifted === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = byte & 0x80;
+    };
+
+    const sra = (byte) => {
+      const shifted = (byte & 0x80) | ((byte >>> 1) & 0xFF);
+      this.#F.Z = shifted === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = 0;
+    };
+
+    const swap = (byte) => {
+      const swapped = ((byte & 0xF) << 4) | ((byte >>> 4) & 0xF);
+      this.#F.Z = swapped === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = 0;
+    };
+
+    const srl = (byte) => {
+      const shifted = (byte >>> 1) & 0xFF;
+      this.#F.Z = shifted === 0;
+      this.#F.N = 0;
+      this.#F.H = 0;
+      this.#F.C = byte & 1;
+    };
+
+    const bit = (byte) => (position) => () => {
+      this.#F.Z = (byte >>> position) & 1 === 0;
+      this.#F.N = 0;
+      this.#F.H = 1;
+    };
+
+    const set = (byte) => (position) => () => byte | (1 << position);
+
+    const res = (byte) => (position) => () => byte & ~(1 << position);
+
+    const register = {
+      B: {
+         rlc: () => { this.#B = rlc(this.#B); },
+         rrc: () => { this.#B = rrc(this.#B); },
+          rl: () => { this.#B = rl(this.#B); },
+          rr: () => { this.#B = rr(this.#B); },
+         sla: () => { this.#B = sla(this.#B); },
+         sra: () => { this.#B = sra(this.#B); },
+        swap: () => { this.#B = swap(this.#B); },
+         srl: () => { this.#B = srl(this.#B); },
+         bit: bit(this.#B),
+         set: set(this.#B),
+         res: res(this.#B),
+      },
+      C: {
+        rlc: () => { this.#C = rlc(this.#C); },
+        rrc: () => { this.#C = rrc(this.#C); },
+         rl: () => { this.#C = rl(this.#C); },
+         rr: () => { this.#C = rr(this.#C); },
+        sla: () => { this.#C = sla(this.#C); },
+        sra: () => { this.#C = sra(this.#C); },
+       swap: () => { this.#C = swap(this.#C); },
+        srl: () => { this.#C = srl(this.#C); },
+        bit: bit(this.#C),
+        set: set(this.#C),
+        res: res(this.#C),
+      },
+      D: {
+         rlc: () => { this.#D = rlc(this.#D); },
+         rrc: () => { this.#D = rrc(this.#D); },
+          rl: () => { this.#D = rl(this.#D); },
+          rr: () => { this.#D = rr(this.#D); },
+         sla: () => { this.#D = sla(this.#D); },
+         sra: () => { this.#D = sra(this.#D); },
+        swap: () => { this.#D = swap(this.#D); },
+         srl: () => { this.#D = srl(this.#D); },
+         bit: bit(this.#D),
+         set: set(this.#D),
+         res: res(this.#D),
+      },
+      E: {
+        rlc: () => { this.#E = rlc(this.#E); },
+        rrc: () => { this.#E = rrc(this.#E); },
+         rl: () => { this.#E = rl(this.#E); },
+         rr: () => { this.#E = rr(this.#E); },
+        sla: () => { this.#E = sla(this.#E); },
+        sra: () => { this.#E = sra(this.#E); },
+       swap: () => { this.#E = swap(this.#E); },
+        srl: () => { this.#E = srl(this.#E); },
+        bit: bit(this.#E),
+        set: set(this.#E),
+        res: res(this.#E),
+      },
+      H: {
+        rlc: () => { this.#H = rlc(this.#H); },
+        rrc: () => { this.#H = rrc(this.#H); },
+         rl: () => { this.#H = rl(this.#H); },
+         rr: () => { this.#H = rr(this.#H); },
+        sla: () => { this.#H = sla(this.#H); },
+        sra: () => { this.#H = sra(this.#H); },
+       swap: () => { this.#H = swap(this.#H); },
+        srl: () => { this.#H = srl(this.#H); },
+        bit: bit(this.#H),
+        set: set(this.#H),
+        res: res(this.#H),
+      },
+      L: {
+        rlc: () => { this.#L = rlc(this.#L); },
+        rrc: () => { this.#L = rrc(this.#L); },
+         rl: () => { this.#L = rl(this.#L); },
+         rr: () => { this.#L = rr(this.#L); },
+        sla: () => { this.#L = sla(this.#L); },
+        sra: () => { this.#L = sra(this.#L); },
+       swap: () => { this.#L = swap(this.#L); },
+        srl: () => { this.#L = srl(this.#L); },
+        bit: bit(this.#L),
+        set: set(this.#L),
+        res: res(this.#L),
+      },
+      HL: {
+        rlc: () => { this.#HL = rlc(this.#HL); },
+        rrc: () => { this.#HL = rrc(this.#HL); },
+         rl: () => { this.#HL = rl(this.#HL); },
+         rr: () => { this.#HL = rr(this.#HL); },
+        sla: () => { this.#HL = sla(this.#HL); },
+        sra: () => { this.#HL = sra(this.#HL); },
+       swap: () => { this.#HL = swap(this.#HL); },
+        srl: () => { this.#HL = srl(this.#HL); },
+        bit: bit(this.#HL),
+        set: set(this.#HL),
+        res: res(this.#HL),
+      },
+      A: {
+        rlc: () => { this.#A = rlc(this.#A); },
+        rrc: () => { this.#A = rrc(this.#A); },
+         rl: () => { this.#A = rl(this.#A); },
+         rr: () => { this.#A = rr(this.#A); },
+        sla: () => { this.#A = sla(this.#A); },
+        sra: () => { this.#A = sra(this.#A); },
+       swap: () => { this.#A = swap(this.#A); },
+        srl: () => { this.#A = srl(this.#A); },
+        bit: bit(this.#A),
+        set: set(this.#A),
+        res: res(this.#A),
+      },
+    };
+    
     return {
-      0x00: () => {},
+      0x00: register.B.rlc,
+      0x01: register.C.rlc,
+      0x02: register.D.rlc,
+      0x03: register.E.rlc,
+      0x04: register.H.rlc,
+      0x05: register.L.rlc,
+      0x06: register.HL.rlc,
+      0x07: register.A.rlc,
+      
+      0x08: register.B.rrc,
+      0x09: register.C.rrc,
+      0x0A: register.D.rrc,
+      0x0B: register.E.rrc,
+      0x0C: register.H.rrc,
+      0x0D: register.L.rrc,
+      0x0E: register.HL.rrc,
+      0x0F: register.A.rrc,
+
+      0x10: register.B.rl,
+      0x11: register.C.rl,
+      0x12: register.D.rl,
+      0x13: register.E.rl,
+      0x14: register.H.rl,
+      0x15: register.L.rl,
+      0x16: register.HL.rl,
+      0x17: register.A.rl,
+
+      0x18: register.B.rr,
+      0x19: register.C.rr,
+      0x1A: register.D.rr,
+      0x1B: register.E.rr,
+      0x1C: register.H.rr,
+      0x1D: register.L.rr,
+      0x1E: register.HL.rr,
+      0x1F: register.A.rr,
+
+      0x20: register.B.sla,
+      0x21: register.C.sla,
+      0x22: register.D.sla,
+      0x23: register.E.sla,
+      0x24: register.H.sla,
+      0x25: register.L.sla,
+      0x26: register.HL.sla,
+      0x27: register.A.sla,
+
+      0x28: register.B.sra,
+      0x29: register.C.sra,
+      0x2A: register.D.sra,
+      0x2B: register.E.sra,
+      0x2C: register.H.sra,
+      0x2D: register.L.sra,
+      0x2E: register.HL.sra,
+      0x2F: register.A.sra,
+
+      0x30: register.B.swap,
+      0x31: register.C.swap,
+      0x32: register.D.swap,
+      0x33: register.E.swap,
+      0x34: register.H.swap,
+      0x35: register.L.swap,
+      0x36: register.HL.swap,
+      0x37: register.A.swap,
+
+      0x38: register.B.srl,
+      0x39: register.C.srl,
+      0x3A: register.D.srl,
+      0x3B: register.E.srl,
+      0x3C: register.H.srl,
+      0x3D: register.L.srl,
+      0x3E: register.HL.srl,
+      0x3F: register.A.srl,
+
+      0x40: register.B.bit(0),
+      0x41: register.C.bit(0),
+      0x42: register.D.bit(0),
+      0x43: register.E.bit(0),
+      0x44: register.H.bit(0),
+      0x45: register.L.bit(0),
+      0x46: register.HL.bit(0),
+      0x47: register.A.bit(0),
+
+      0x48: register.B.bit(1),
+      0x49: register.C.bit(1),
+      0x4A: register.D.bit(1),
+      0x4B: register.E.bit(1),
+      0x4C: register.H.bit(1),
+      0x4D: register.L.bit(1),
+      0x4E: register.HL.bit(1),
+      0x4F: register.A.bit(1),
+
+      0x50: register.B.bit(2),
+      0x51: register.C.bit(2),
+      0x52: register.D.bit(2),
+      0x53: register.E.bit(2),
+      0x54: register.H.bit(2),
+      0x55: register.L.bit(2),
+      0x56: register.HL.bit(2),
+      0x57: register.A.bit(2),
+
+      0x58: register.B.bit(3),
+      0x59: register.C.bit(3),
+      0x5A: register.D.bit(3),
+      0x5B: register.E.bit(3),
+      0x5C: register.H.bit(3),
+      0x5D: register.L.bit(3),
+      0x5E: register.HL.bit(3),
+      0x5F: register.A.bit(3),
+
+      0x60: register.B.bit(4),
+      0x61: register.C.bit(4),
+      0x62: register.D.bit(4),
+      0x63: register.E.bit(4),
+      0x64: register.H.bit(4),
+      0x65: register.L.bit(4),
+      0x66: register.HL.bit(4),
+      0x67: register.A.bit(4),
+
+      0x68: register.B.bit(5),
+      0x69: register.C.bit(5),
+      0x6A: register.D.bit(5),
+      0x6B: register.E.bit(5),
+      0x6C: register.H.bit(5),
+      0x6D: register.L.bit(5),
+      0x6E: register.HL.bit(5),
+      0x6F: register.A.bit(5),
+
+      0x70: register.B.bit(6),
+      0x71: register.C.bit(6),
+      0x72: register.D.bit(6),
+      0x73: register.E.bit(6),
+      0x74: register.H.bit(6),
+      0x75: register.L.bit(6),
+      0x76: register.HL.bit(6),
+      0x77: register.A.bit(6),
+
+      0x78: register.B.bit(7),
+      0x79: register.C.bit(7),
+      0x7A: register.D.bit(7),
+      0x7B: register.E.bit(7),
+      0x7C: register.H.bit(7),
+      0x7D: register.L.bit(7),
+      0x7E: register.HL.bit(7),
+      0x7F: register.A.bit(7),
+
+      0x80: register.B.res(0),
+      0x81: register.C.res(0),
+      0x82: register.D.res(0),
+      0x83: register.E.res(0),
+      0x84: register.H.res(0),
+      0x85: register.L.res(0),
+      0x86: register.HL.res(0),
+      0x87: register.A.res(0),
+
+      0x88: register.B.res(1),
+      0x89: register.C.res(1),
+      0x8A: register.D.res(1),
+      0x8B: register.E.res(1),
+      0x8C: register.H.res(1),
+      0x8D: register.L.res(1),
+      0x8E: register.HL.res(1),
+      0x8F: register.A.res(1),
+
+      0x90: register.B.res(2),
+      0x91: register.C.res(2),
+      0x92: register.D.res(2),
+      0x93: register.E.res(2),
+      0x94: register.H.res(2),
+      0x95: register.L.res(2),
+      0x96: register.HL.res(2),
+      0x97: register.A.res(2),
+
+      0x98: register.B.res(3),
+      0x99: register.C.res(3),
+      0x9A: register.D.res(3),
+      0x9B: register.E.res(3),
+      0x9C: register.H.res(3),
+      0x9D: register.L.res(3),
+      0x9E: register.HL.res(3),
+      0x9F: register.A.res(3),
+
+      0xA0: register.B.res(4),
+      0xA1: register.C.res(4),
+      0xA2: register.D.res(4),
+      0xA3: register.E.res(4),
+      0xA4: register.H.res(4),
+      0xA5: register.L.res(4),
+      0xA6: register.HL.res(4),
+      0xA7: register.A.res(4),
+
+      0xA8: register.B.res(5),
+      0xA9: register.C.res(5),
+      0xAA: register.D.res(5),
+      0xAB: register.E.res(5),
+      0xAC: register.H.res(5),
+      0xAD: register.L.res(5),
+      0xAE: register.HL.res(5),
+      0xAF: register.A.res(5),
+
+      0xB0: register.B.res(6),
+      0xB1: register.C.res(6),
+      0xB2: register.D.res(6),
+      0xB3: register.E.res(6),
+      0xB4: register.H.res(6),
+      0xB5: register.L.res(6),
+      0xB6: register.HL.res(6),
+      0xB7: register.A.res(6),
+
+      0xB8: register.B.res(7),
+      0xB9: register.C.res(7),
+      0xBA: register.D.res(7),
+      0xBB: register.E.res(7),
+      0xBC: register.H.res(7),
+      0xBD: register.L.res(7),
+      0xBE: register.HL.res(7),
+      0xBF: register.A.res(7),
+
+      0xC0: register.B.set(0),
+      0xC1: register.C.set(0),
+      0xC2: register.D.set(0),
+      0xC3: register.E.set(0),
+      0xC4: register.H.set(0),
+      0xC5: register.L.set(0),
+      0xC6: register.HL.set(0),
+      0xC7: register.A.set(0),
+
+      0xC8: register.B.set(1),
+      0xC9: register.C.set(1),
+      0xCA: register.D.set(1),
+      0xCB: register.E.set(1),
+      0xCC: register.H.set(1),
+      0xCD: register.L.set(1),
+      0xCE: register.HL.set(1),
+      0xCF: register.A.set(1),
+
+      0xD0: register.B.set(2),
+      0xD1: register.C.set(2),
+      0xD2: register.D.set(2),
+      0xD3: register.E.set(2),
+      0xD4: register.H.set(2),
+      0xD5: register.L.set(2),
+      0xD6: register.HL.set(2),
+      0xD7: register.A.set(2),
+
+      0xD8: register.B.set(3),
+      0xD9: register.C.set(3),
+      0xDA: register.D.set(3),
+      0xDB: register.E.set(3),
+      0xDC: register.H.set(3),
+      0xDD: register.L.set(3),
+      0xDE: register.HL.set(3),
+      0xDF: register.A.set(3),
+
+      0xE0: register.B.set(4),
+      0xE1: register.C.set(4),
+      0xE2: register.D.set(4),
+      0xE3: register.E.set(4),
+      0xE4: register.H.set(4),
+      0xE5: register.L.set(4),
+      0xE6: register.HL.set(4),
+      0xE7: register.A.set(4),
+
+      0xE8: register.B.set(5),
+      0xE9: register.C.set(5),
+      0xEA: register.D.set(5),
+      0xEB: register.E.set(5),
+      0xEC: register.H.set(5),
+      0xED: register.L.set(5),
+      0xEE: register.HL.set(5),
+      0xEF: register.A.set(5),
+
+      0xF0: register.B.set(6),
+      0xF1: register.C.set(6),
+      0xF2: register.D.set(6),
+      0xF3: register.E.set(6),
+      0xF4: register.H.set(6),
+      0xF5: register.L.set(6),
+      0xF6: register.HL.set(6),
+      0xF7: register.A.set(6),
+
+      0xF8: register.B.set(7),
+      0xF9: register.C.set(7),
+      0xFA: register.D.set(7),
+      0xFB: register.E.set(7),
+      0xFC: register.H.set(7),
+      0xFD: register.L.set(7),
+      0xFE: register.HL.set(7),
+      0xFF: register.A.set(7),
     };
   }
 
