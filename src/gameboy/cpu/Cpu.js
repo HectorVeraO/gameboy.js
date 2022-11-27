@@ -1355,6 +1355,10 @@ export class Cpu {
   }
 
   #getPrefixCBOperationByOpcode() {
+    const readMemory = (address) => this.read(address);
+
+    const writeMemory = (address, byte) => this.write(address, byte);
+
     const rlc = (byte) => {
       const rotated = ((byte << 1) & 0xFF) | ((byte >>> 7) & 1);
       this.#F.Z = rotated === 0;
@@ -1510,17 +1514,17 @@ export class Cpu {
         res: res(this.#L),
       },
       HL: {
-        rlc: () => { this.#HL = rlc(this.#HL); },
-        rrc: () => { this.#HL = rrc(this.#HL); },
-         rl: () => { this.#HL = rl(this.#HL); },
-         rr: () => { this.#HL = rr(this.#HL); },
-        sla: () => { this.#HL = sla(this.#HL); },
-        sra: () => { this.#HL = sra(this.#HL); },
-       swap: () => { this.#HL = swap(this.#HL); },
-        srl: () => { this.#HL = srl(this.#HL); },
-        bit: bit(this.#HL),
-        set: set(this.#HL),
-        res: res(this.#HL),
+        rlc: () => { writeMemory( rlc( readMemory(this.#HL) ) ); },
+        rrc: () => { writeMemory( rrc( readMemory(this.#HL) ) ); },
+         rl: () => { writeMemory( rl( readMemory(this.#HL) ) ); },
+         rr: () => { writeMemory( rr( readMemory(this.#HL) ) ); },
+        sla: () => { writeMemory( sla( readMemory(this.#HL) ) ); },
+        sra: () => { writeMemory( sra( readMemory(this.#HL) ) ); },
+       swap: () => { writeMemory( swap( readMemory(this.#HL) ) ); },
+        srl: () => { writeMemory( srl( readMemory(this.#HL) ) ); },
+        bit: bit( readMemory(this.#HL) ),
+        set: set( readMemory(this.#HL) ),
+        res: res( readMemory(this.#HL) ),
       },
       A: {
         rlc: () => { this.#A = rlc(this.#A); },
