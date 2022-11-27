@@ -1421,7 +1421,7 @@ export class Cpu {
     };
 
     const bit = (byte) => (position) => () => {
-      this.#F.Z = (byte >>> position) & 1 === 0;
+      this.#F.Z = ((byte >>> position) & 1) === 0;
       this.#F.N = 0;
       this.#F.H = 1;
     };
