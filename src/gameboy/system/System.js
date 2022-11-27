@@ -43,8 +43,18 @@ export class System {
   /** Interrupt Enable register (IE) */
   ier = System.#createMemory(0x0001 * byte);
   
-  constructor() {
+  /**
+   * 
+   * @param {() => Uint8Array} fetchCartrige 
+   */
+  constructor(fetchCartrige) {
     this.cpu = new SharpLR35902(this.#readMemory, this.#writeMemory);
+    this.#fetchCartridge = fetchCartrige;
+  }
+
+  loadCartridge() {
+    const bytes = this.#fetchCartridge();
+    this.cartridge = new Cartridge(bytes);
   }
 
   #readMemory(address) {
@@ -132,4 +142,6 @@ export class System {
   static #createMemory(capacity) {
     return ContainerFactory.create({ capacity: capacity, bitsPerSlot: System.#bitsPerWord });
   }
+
+  #fetchCartridge;
 }
