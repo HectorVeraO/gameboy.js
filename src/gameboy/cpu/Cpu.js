@@ -9,8 +9,23 @@ import { RegisterF } from "./registers/RegisterF";
  * https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
  */
 export class Cpu {
-  constructor() {
 
+  /**
+   * 
+   * @param {(address: uint16) => uint8} readMemory 
+   * @param {(address: uint16, byte: uint8) => void} writeMemory 
+   */
+  constructor(
+    readMemory,
+    writeMemory,
+  ) {
+    if (typeof readMemory !== 'function')
+      throw new Error('Missing readMemory implementation');
+    this.#read = readMemory;
+
+    if (typeof writeMemory !== 'function')
+      throw new Error('Missing writeMemory implementation');
+    this.#write = writeMemory;
   }
 
   step() {
@@ -35,25 +50,17 @@ export class Cpu {
     instruction.execute();
   }
 
-  read(address) {
-
-  }
-
-  write(address, value) {
-
-  }
-
   /**
    * Fetches the value pointed by the PC an offset, without modifying the CPU's state
    * @param {number} offset
    * @returns 
    */
   peek(offset = 0) {
-    return this.read(this.PC + offset);
+    return this.#read(this.PC + offset);
   }
 
   fetch() {
-    return this.read(this.#PC++);
+    return this.#read(this.#PC++);
   }
 
   /**
@@ -61,12 +68,25 @@ export class Cpu {
    * @returns {number} opcode or operand
    */
   opcode() {
-    return this.read(this.#PC++);
+    return this.#read(this.#PC++);
   }
 
   operand() {
-    return this.read(this.#PC++);
+    return this.#read(this.#PC++);
   }
+
+  /**
+   * @param {uint16} address
+   * @returns uint8
+   */
+  #read;
+  
+  /**
+   * @param {uint16} address
+   * @param {uint8} byte
+   * @returns void
+   */
+  #write;
 
   /**
    * 
@@ -171,15 +191,15 @@ export class Cpu {
 
   #push(word) {
     const highByte = (word & 0xFF00) >>> 8; // The GameBoy's CPU behaves as a little endian CPU when dealing
-    this.write(--this.#SP, highByte);       // with multi-byte data, thus we need to push bytes onto the stack
+    this.#write(--this.#SP, highByte);       // with multi-byte data, thus we need to push bytes onto the stack
                                             // in a way that allows us to read them back in an increasing
     const lowByte = word & 0x00FF;          // order of significance.
-    this.write(--this.#SP, lowByte);        // (Remember that a stack follows the LIFO principle)
+    this.#write(--this.#SP, lowByte);        // (Remember that a stack follows the LIFO principle)
   }
 
   #pop() {
-    const lowByte = this.read(this.#SP++);
-    const highByte = this.read(this.#SP++);
+    const lowByte = this.#read(this.#SP++);
+    const highByte = this.#read(this.#SP++);
 
     return (highByte << 8) | lowByte;
   }
@@ -830,14 +850,14 @@ export class Cpu {
   }
 
   #getLSM8bitImplementationByOpcode() {
-    const readMemory = (address) => this.read(address);
-    const loadMemory = (address, byte) => this.write(address, byte);
+    const readMemory = (address) => this.#read(address);
+    const loadMemory = (address, byte) => this.#write(address, byte);
 
     const operand = () => this.operand();
     const operand16 = () => (operand() << 8) | operand();
     
-    const readHRAM = (addressLowByte) => this.read(0xFF00 | addressLowByte);
-    const loadHRAM = (addressLowByte, byte) => this.write(0xFF00 | addressLowByte, byte)
+    const readHRAM = (addressLowByte) => this.#read(0xFF00 | addressLowByte);
+    const loadHRAM = (addressLowByte, byte) => this.#write(0xFF00 | addressLowByte, byte)
 
     const loadRegisterA = (byte) => this.#A = byte;
     const loadRegisterB = (byte) => this.#B = byte;
@@ -847,9 +867,9 @@ export class Cpu {
     const loadRegisterH = (byte) => this.#H = byte;
     const loadRegisterL = (byte) => this.#L = byte;
 
-    const loadMemoryPointedByBC = (byte) => this.write(this.#BC, byte);
-    const loadMemoryPointedByDE = (byte) => this.write(this.#DE, byte);
-    const loadMemoryPointedByHL = (byte) => this.write(this.#HL, byte);
+    const loadMemoryPointedByBC = (byte) => this.#write(this.#BC, byte);
+    const loadMemoryPointedByDE = (byte) => this.#write(this.#DE, byte);
+    const loadMemoryPointedByHL = (byte) => this.#write(this.#HL, byte);
 
     const decrementHL = () => this.#HL--;
     const incrementHL = () => this.#HL++;
@@ -958,7 +978,7 @@ export class Cpu {
   }
 
   #getLSM16bitImplementationByOpcode() {
-    const loadMemory = (address, byte) => this.write(address, byte);
+    const loadMemory = (address, byte) => this.#write(address, byte);
 
     const operand = () => this.operand();
     const operand16 = () => (operand() << 8) | operand();
@@ -997,11 +1017,10 @@ export class Cpu {
 
   // TODO: Handle flags
   #getAL8bitImplementationByOpcode() {
-    const readMemory = (address) => this.read(address);
-    const loadMemory = (address, byte) => this.write(address, byte);
+    const readMemory = (address) => this.#read(address);
+    const loadMemory = (address, byte) => this.#write(address, byte);
 
     const operand = () => this.operand();
-    const operand16 = () => (operand() << 8) | operand();
     
     const incrementA = () => { const previous = this.#A++; this.#F.Z = this.#A === 0; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF)); };
     const incrementB = () => { const previous = this.#B++; this.#F.Z = this.#B === 0; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF)); };
@@ -1010,7 +1029,6 @@ export class Cpu {
     const incrementE = () => { const previous = this.#E++; this.#F.Z = this.#E === 0; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF)); };
     const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H === 0; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF)); };
     const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L === 0; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF)); };
-    const incrementF = () => { const previous = this.#F++; this.#F.Z = this.#F === 0; this.#F.H = ((this.#F & 0xFF) > (previous & 0xFF)); };
 
     const decrementA = () => this.#A++;
     const decrementB = () => this.#B++;
@@ -1019,7 +1037,6 @@ export class Cpu {
     const decrementE = () => this.#E++;
     const decrementH = () => this.#H++;
     const decrementL = () => this.#L++;
-    const decrementF = () => this.#F++;
 
     const nibble = (value, position) => (value >>> (4 * position)) & 0xF;
     const applyDecimalCorrectionForA = () => {
@@ -1355,9 +1372,9 @@ export class Cpu {
   }
 
   #getPrefixCBOperationByOpcode() {
-    const readMemory = (address) => this.read(address);
+    const readMemory = (address) => this.#read(address);
 
-    const writeMemory = (address, byte) => this.write(address, byte);
+    const writeMemory = (address, byte) => this.#write(address, byte);
 
     const rlc = (byte) => {
       const rotated = ((byte << 1) & 0xFF) | ((byte >>> 7) & 1);
