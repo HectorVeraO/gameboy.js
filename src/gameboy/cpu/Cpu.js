@@ -1391,6 +1391,7 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = byte & 1;
+      return rotated;
     };
 
     const rl = (byte) => {
@@ -1399,6 +1400,7 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = byte & 0x80;
+      return rotated;
     };
 
     const rr = (byte) => {
@@ -1407,6 +1409,7 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = byte & 1;
+      return rotated;
     };
 
     const sla = (byte) => {
@@ -1415,6 +1418,7 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = byte & 0x80;
+      return shifted;
     };
 
     const sra = (byte) => {
@@ -1423,6 +1427,7 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = 0;
+      return shifted;
     };
 
     const swap = (byte) => {
@@ -1431,6 +1436,7 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = 0;
+      return swapped;
     };
 
     const srl = (byte) => {
@@ -1439,17 +1445,18 @@ export class Cpu {
       this.#F.N = 0;
       this.#F.H = 0;
       this.#F.C = byte & 1;
+      return shifted;
     };
 
-    const bit = (byte) => (position) => () => {
+    const bit = (byte) => (position) => {
       this.#F.Z = ((byte >>> position) & 1) === 0;
       this.#F.N = 0;
       this.#F.H = 1;
     };
 
-    const set = (byte) => (position) => () => byte | (1 << position);
+    const set = (byte) => (position) => byte | (1 << position);
 
-    const res = (byte) => (position) => () => byte & ~(1 << position);
+    const res = (byte) => (position) => byte & ~(1 << position);
 
     const register = {
       B: {
@@ -1461,9 +1468,9 @@ export class Cpu {
          sra: () => { this.#B = sra(this.#B); },
         swap: () => { this.#B = swap(this.#B); },
          srl: () => { this.#B = srl(this.#B); },
-         bit: bit(this.#B),
-         set: set(this.#B),
-         res: res(this.#B),
+         bit: () => { bit(this.#B); },
+         set: () => { this.#B = set(this.#B); },
+         res: () => { this.#B = res(this.#B); },
       },
       C: {
         rlc: () => { this.#C = rlc(this.#C); },
@@ -1474,9 +1481,9 @@ export class Cpu {
         sra: () => { this.#C = sra(this.#C); },
        swap: () => { this.#C = swap(this.#C); },
         srl: () => { this.#C = srl(this.#C); },
-        bit: bit(this.#C),
-        set: set(this.#C),
-        res: res(this.#C),
+        bit: () => { bit(this.#C); },
+        set: () => { this.#C = set(this.#C); },
+        res: () => { this.#C = res(this.#C); },
       },
       D: {
          rlc: () => { this.#D = rlc(this.#D); },
@@ -1487,9 +1494,9 @@ export class Cpu {
          sra: () => { this.#D = sra(this.#D); },
         swap: () => { this.#D = swap(this.#D); },
          srl: () => { this.#D = srl(this.#D); },
-         bit: bit(this.#D),
-         set: set(this.#D),
-         res: res(this.#D),
+         bit: () => { bit(this.#D); },
+         set: () => { this.#D = set(this.#D); },
+         res: () => { this.#D = res(this.#D); },
       },
       E: {
         rlc: () => { this.#E = rlc(this.#E); },
@@ -1500,9 +1507,9 @@ export class Cpu {
         sra: () => { this.#E = sra(this.#E); },
        swap: () => { this.#E = swap(this.#E); },
         srl: () => { this.#E = srl(this.#E); },
-        bit: bit(this.#E),
-        set: set(this.#E),
-        res: res(this.#E),
+        bit: () => { bit(this.#E); },
+        set: () => { this.#E = set(this.#E); },
+        res: () => { this.#E = res(this.#E); },
       },
       H: {
         rlc: () => { this.#H = rlc(this.#H); },
@@ -1513,9 +1520,9 @@ export class Cpu {
         sra: () => { this.#H = sra(this.#H); },
        swap: () => { this.#H = swap(this.#H); },
         srl: () => { this.#H = srl(this.#H); },
-        bit: bit(this.#H),
-        set: set(this.#H),
-        res: res(this.#H),
+        bit: () => { bit(this.#H); },
+        set: () => { this.#H = set(this.#H); },
+        res: () => { this.#H = res(this.#H); },
       },
       L: {
         rlc: () => { this.#L = rlc(this.#L); },
@@ -1526,9 +1533,9 @@ export class Cpu {
         sra: () => { this.#L = sra(this.#L); },
        swap: () => { this.#L = swap(this.#L); },
         srl: () => { this.#L = srl(this.#L); },
-        bit: bit(this.#L),
-        set: set(this.#L),
-        res: res(this.#L),
+        bit: () => { bit(this.#L); },
+        set: () => { this.#L = set(this.#L); },
+        res: () => { this.#L = res(this.#L); },
       },
       HL: {
         rlc: () => { writeMemory( rlc( readMemory(this.#HL) ) ); },
@@ -1539,9 +1546,9 @@ export class Cpu {
         sra: () => { writeMemory( sra( readMemory(this.#HL) ) ); },
        swap: () => { writeMemory( swap( readMemory(this.#HL) ) ); },
         srl: () => { writeMemory( srl( readMemory(this.#HL) ) ); },
-        bit: bit( readMemory(this.#HL) ),
-        set: set( readMemory(this.#HL) ),
-        res: res( readMemory(this.#HL) ),
+        bit: () => { bit( readMemory(this.#HL) ); },
+        set: () => { writeMemory( set( readMemory(this.#HL) ) ); },
+        res: () => { writeMemory( res( readMemory(this.#HL) ) ); },
       },
       A: {
         rlc: () => { this.#A = rlc(this.#A); },
@@ -1552,9 +1559,9 @@ export class Cpu {
         sra: () => { this.#A = sra(this.#A); },
        swap: () => { this.#A = swap(this.#A); },
         srl: () => { this.#A = srl(this.#A); },
-        bit: bit(this.#A),
-        set: set(this.#A),
-        res: res(this.#A),
+        bit: () => { bit(this.#A); },
+        set: () => { this.#A = set(this.#A); },
+        res: () => { this.#A = res(this.#A); },
       },
     };
     
