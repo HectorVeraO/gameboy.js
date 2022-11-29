@@ -13,6 +13,7 @@ export class Uint8 {
     return (this >> position) & 0x01;
   }
 
+  // TODO: Simplify this implementation for the workshop
   setBit(position, value = 1) {
     const bit = value ? 1 : 0;
     this.#value ^= (-bit ^ this.#value) & (1 << position);
@@ -45,8 +46,7 @@ export class Uint8 {
   setBitRange(position, size, value) {
     const rangeMask = MASK_BY_BIT_WIDTH[size];
     const boundedValue = value & rangeMask;
-    const byte = (this & ~(rangeMask << position)) | (boundedValue << position);
-    this.set(byte);
+    this.#value = (this & ~(rangeMask << position)) | (boundedValue << position);
   }
 
   valueOf() {
