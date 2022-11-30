@@ -10,7 +10,7 @@ export class RegisterSTAT extends Uint8 {
 
     for (const key in RegisterSTAT.#BIT_FIELD) {
       const { position, size, valueAfterReset } = RegisterSTAT.#BIT_FIELD[key];
-      this.setBit(position, size, valueAfterReset);
+      this.setBitRange(position, size, valueAfterReset);
     }
   }
 
