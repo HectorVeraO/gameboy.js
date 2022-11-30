@@ -9,8 +9,8 @@ export class RegisterLCDC extends Uint8 {
     super();
 
     for (const key in RegisterLCDC.#BIT_FIELD) {
-      const { position, valueAfterReset } = RegisterLCDC.#BIT_FIELD[key];
-      this.setBit(position, valueAfterReset);
+      const { position, size, valueAfterReset } = RegisterLCDC.#BIT_FIELD[key];
+      this.setBitRange(position, size, valueAfterReset);
     }
   }
 

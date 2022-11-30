@@ -9,8 +9,8 @@ export class RegisterSTAT extends Uint8 {
     super();
 
     for (const key in RegisterSTAT.#BIT_FIELD) {
-      const { position, valueAfterReset } = RegisterSTAT.#BIT_FIELD[key];
-      this.setBit(position, valueAfterReset);
+      const { position, size, valueAfterReset } = RegisterSTAT.#BIT_FIELD[key];
+      this.setBit(position, size, valueAfterReset);
     }
   }
 
