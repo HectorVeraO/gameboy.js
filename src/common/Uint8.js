@@ -24,7 +24,7 @@ export class Uint8 {
   }
   
   /**
-   * Unchecked bit range for 8-bit integers
+   * Unchecked bit range
    * @param {uint3} position 
    * @param {uint3} size 
    * @returns uint8
@@ -38,7 +38,7 @@ export class Uint8 {
   }
 
   /**
-   * Unchecked bit range update for 8-bit integers
+   * Unchecked bit range update
    * @param {uint3} position 
    * @param {uint3} size 
    * @param {uint8} value 
