@@ -19,9 +19,69 @@ export class RegisterSTAT extends Uint8 {
     return this.bitRange(position, size);
   }
 
-  set lcdMode(value) {
+  get lycStat() {
+    const { position } = RegisterSTAT.#BIT_FIELD.LYC_STAT;
+    return this.bit(position);
+  }
+
+  get intrM0() {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_M0;
+    return this.bit(position);
+  }
+
+  get intrM1() {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_M1;
+    return this.bit(position);
+  }
+
+  get intrM2() {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_M2;
+    return this.bit(position);
+  }
+
+  get intrLyc() {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_LYC;
+    return this.bit(position);
+  }
+
+  get u1() {
+    return RegisterSTAT.#BIT_FIELD.U1.valueAfterReset;
+  }
+
+  set lcdMode(bit) {
     const { position, size } = RegisterSTAT.#BIT_FIELD.LCD_MODE;
-    this.setBitRange(position, size, value);
+    this.setBitRange(position, size, bit);
+  }
+
+  set lycStat(bit) {
+    const { position } = RegisterSTAT.#BIT_FIELD.LYC_STAT;
+    this.setBit(position, bit);
+  }
+
+  set intrM0(bit) {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_M0;
+    this.setBit(position, bit);
+  }
+
+  set intrM1(bit) {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_M1;
+    this.setBit(position, bit);
+  }
+
+  set intrM2(bit) {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_M2;
+    this.setBit(position, bit);
+  }
+
+  set intrLyc(bit) {
+    const { position } = RegisterSTAT.#BIT_FIELD.INTR_LYC;
+    this.setBit(position, bit);
+  }
+
+  set u1(bit) {
+    const { position, valueAfterReset } = RegisterSTAT.#BIT_FIELD.U1.valueAfterReset;
+    bit = valueAfterReset;
+    this.setBit(position, bit);
   }
 
   static #BIT_FIELD = {
@@ -34,3 +94,4 @@ export class RegisterSTAT extends Uint8 {
           U1: { position: 7, size: 1, isReadable: true, isWritable: false, valueAfterReset: 1 },
   };
 }
+

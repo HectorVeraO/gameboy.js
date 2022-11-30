@@ -14,9 +14,9 @@ export class Uint8 {
   }
 
   // TODO: Simplify this implementation for the workshop
-  setBit(position, value = 1) {
-    const bit = value ? 1 : 0;
-    this.#value ^= (-bit ^ this.#value) & (1 << position);
+  setBit(position, bit = 1) {
+    const boundedBit = bit ? 1 : 0;
+    this.#value ^= (-(boundedBit) ^ this.#value) & (1 << position);
   }
 
   clearBit(position) {
