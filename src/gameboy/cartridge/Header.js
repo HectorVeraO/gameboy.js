@@ -11,7 +11,7 @@
   /** 0x104...0x133 Bitmap image displayed on boot. It must match an exact hexadecimal dump otherwise the game won't boot */
   nintendoLogo;
 
-  /** 0x134...0x143 Game's title, up to 16 upper case ASCII chars on old titles and up to 11 chars on GBC titles */
+  /** @type {string} 0x134...0x143 Game's title, up to 16 upper case ASCII chars on old titles and up to 11 chars on GBC titles */
   title;
 
   /** 0x13F...0x142 Unknown purpose, 4 upper case ASCII chars, present on newer cartridges and "steals" bytes from the title region */

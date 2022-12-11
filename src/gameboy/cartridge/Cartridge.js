@@ -22,6 +22,14 @@ export class Cartridge {
     this.#mbc.write(address, value);
   }
 
+  get title() {
+    return this.#header.title;
+  }
+
+  toString() {
+    return this.title;
+  }
+
   #gamepakBytes;
   #header;
   #mbc;
