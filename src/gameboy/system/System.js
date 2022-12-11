@@ -2,6 +2,7 @@ import { ContainerFactory } from "@common/ContainerFactory";
 import { byte, KiB } from "@common/constants/InformationUnits";
 import { SharpLR35902 } from "@gameboy/cpu/Cpu";
 import { Cartridge } from "@gameboy/cartridge/Cartridge";
+import { Ppu } from "@gameboy/ppu/Ppu";
 
 /**
  * GameBoy SoC representation (plus the Work RAM and Video RAM for convenience)
@@ -49,7 +50,15 @@ export class System {
    */
   constructor(fetchCartrige) {
     this.cpu = new SharpLR35902(this.#readMemory, this.#writeMemory);
+    this.ppu = new Ppu(this.#readMemory, this.#writeMemory);
     this.#fetchCartridge = fetchCartrige;
+  }
+
+  async clock() {
+    const tStates = this.cpu.step();
+    this.ppu.performDots(tStates);
+    const mStates = tStates / 4;
+    // TODO: Wait time
   }
 
   loadCartridge() {
@@ -125,7 +134,7 @@ export class System {
       this.oam[boundedAddress - 0xFE00] = byte;
 
     else if (boundedAddress < 0xFF00)
-      this.fmem[boundedAddress - 0xFEA0]; // Nintendo says use of this area is prohibite = byted
+      this.fmem[boundedAddress - 0xFEA0]; // Nintendo says use of this area is prohibited = byted
 
     else if (boundedAddress < 0xFF80)
       this.ior[boundedAddress - 0xFF00] = byte;
