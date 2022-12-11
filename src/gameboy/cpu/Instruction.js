@@ -17,9 +17,10 @@ export class Instruction {
   }
 
   get execute() {
-    return this.#fn;
+    return this.#fn() || 0;
   }
 
+  /** @param {{ opcode: uint8, mnemonic: string, cycles: uint8, byteLength: uint8, fn: () => uint8 }} definition */
   constructor({ opcode, mnemonic, cycles, byteLength, fn }) {
     this.#opcode = opcode;
     this.#mnemonic = mnemonic;
@@ -28,9 +29,18 @@ export class Instruction {
     this.#fn = fn;
   }
 
+  /** @type {uint8} */
   #opcode;
+
+  /** @type {string}  */
   #mnemonic;
+
+  /** @type {uint8} */
   #cycles;
+
+  /** @type {uint8} */
   #byteLength;
+
+  /** @type {() => uint8} */
   #fn;
 }
