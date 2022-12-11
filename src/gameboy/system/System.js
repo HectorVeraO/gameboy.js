@@ -1,6 +1,6 @@
 import { ContainerFactory } from "@common/ContainerFactory";
 import { byte, KiB } from "@common/constants/InformationUnits";
-import { SharpLR35902 } from "@gameboy/cpu/Cpu";
+import { Cpu, SharpLR35902 } from "@gameboy/cpu/Cpu";
 import { Cartridge } from "@gameboy/cartridge/Cartridge";
 import { Ppu } from "@gameboy/ppu/Ppu";
 
@@ -11,14 +11,6 @@ import { Ppu } from "@gameboy/ppu/Ppu";
  */
 export class System {
   static bitsPerWord = 8;
-
-  cartridge = new Cartridge(new Uint8Array(0)); // FIXME: Handle as "Empty Cartridge"
-
-  cpu;
-
-  ppu;
-
-  apu;
 
   /** Video RAM */
   vram = System.#createMemory(16 * KiB);
@@ -49,14 +41,29 @@ export class System {
    * @param {() => Uint8Array} fetchCartrige 
    */
   constructor(fetchCartrige) {
-    this.cpu = new SharpLR35902(this.#readMemory, this.#writeMemory);
-    this.ppu = new Ppu(this.#readMemory, this.#writeMemory);
+    this.#readMemory = this.#readMemory.bind(this);
+    this.#writeMemory = this.#writeMemory.bind(this);
+
+    const memoryPins = { read: this.#readMemory, write: this.#writeMemory };
+
+    this.#cpu = new SharpLR35902(memoryPins);
+    this.#ppu = new Ppu(memoryPins);
+
     this.#fetchCartridge = fetchCartrige;
   }
 
+  power() {
+    this.reset();
+  }
+
+  reset() {
+    this.#cpu.reset();
+    this.#ppu.reset();
+  }
+
   async clock() {
-    const tStates = this.cpu.step();
-    this.ppu.performDots(tStates);
+    const tStates = this.#cpu.step();
+    this.#ppu.performDots(tStates);
     const mStates = tStates / 4;
     // TODO: Wait time
   }
@@ -66,8 +73,17 @@ export class System {
     this.cartridge = new Cartridge(bytes);
   }
 
+  unloadCartridge() {
+    this.cartridge = new Cartridge(new Uint8Array(0)) // FIXME: Handle as "Empty Cartridge"
+    // TODO: Reset?
+  }
+
+  // TODO: Link CPU and PPU guards
   #readMemory(address) {
     const boundedAddress = address & 0xFFFF;
+
+    if (boundedAddress < 0x0100)
+      return this.#cpu.bootRom[address];
 
     if (boundedAddress < 0x4000)
       return this.cartridge.read(address);
@@ -106,6 +122,7 @@ export class System {
       return this.ier[0];
   }
 
+  // TODO: Link CPU and PPU guards
   #writeMemory(address, byte) {
     const boundedAddress = address & 0xFFFF;
 
@@ -152,5 +169,18 @@ export class System {
     return ContainerFactory.create({ capacity: capacity, bitsPerSlot: System.#bitsPerWord });
   }
 
+  /** @type {() => Uint8Array} */
   #fetchCartridge;
+
+  /** @type {Cartridge} */
+  cartridge = new Cartridge(new Uint8Array(0)); // FIXME: Handle as "Empty Cartridge"
+
+  /** @type {Cpu} */
+  #cpu;
+
+  /** @type {Ppu} */
+  #ppu;
+
+  /** @type {Apu} */
+  #apu;
 }

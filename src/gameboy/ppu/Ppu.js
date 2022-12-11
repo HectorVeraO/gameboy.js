@@ -17,15 +17,38 @@ const MONOCHROME_COLOR_BY_VALUE = {
 const int8 = (byte) => byte << 24 >> 24;
 
 export class Ppu {
+  /** @param {{ read: (address: uint16) => uint8, write: (address: uint16, byte: uint8) => void }} memoryPins */
+  constructor({ read, write }) {
+    this.#read = read;
+    this.#write = write;
+  }
 
-  /**
-   * 
-   * @param {(address: uint16) => uint8} readMemory 
-   * @param {(address: uint16, byte: uint8) => void} writeMemory 
-   */
-  constructor(readMemory, writeMemory) {
-    this.#read = readMemory;
-    this.#write = writeMemory;
+    /** Proctects reads of regions managed by PPU  */
+    guardRead(address) {
+      // TODO: Return null if address isn't managed by PPU
+      // TODO: Return spec compliant value if address is managed by PPU
+    }
+  
+    guardWrite(address, byte) {
+      // TODO: Return false if address isn't manged by PPU
+      // TODO: Return true if address is managed by PPU and handle write as specified
+    }
+
+  reset() {
+    this.#LCDC = new RegisterLCDC();
+    this.#STAT = new RegisterSTAT();
+    this.#SCY = new RegisterSCY();
+    this.#SCX = new RegisterSCX();
+    this.#LY = new RegisterLY();
+    this.#LYC = new RegisterLYC();
+    this.#BGP = new RegisterBGP();
+    this.#WX = new Uint8();
+    this.#WY = new Uint8();
+
+    this.#dotCount = 0;
+    this.#modeDotCount = 0;
+
+    this.#frameBuffer = new Uint32Array(Ppu.#FRAME_SIZE);
   }
 
   performDots(dotCount) {
