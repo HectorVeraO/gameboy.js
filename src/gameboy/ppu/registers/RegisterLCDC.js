@@ -14,8 +14,8 @@ export class RegisterLCDC extends Uint8 {
     }
   }
 
-  get bgEn() {
-    return this.bit(RegisterLCDC.#BIT_FIELD.BG_EN.position);
+  get bgwEnPr() {
+    return this.bit(RegisterLCDC.#BIT_FIELD.BGW_EN_PR.position);
   }
 
   get objEn() {
@@ -46,8 +46,8 @@ export class RegisterLCDC extends Uint8 {
     return this.bit(RegisterLCDC.#BIT_FIELD.LCD_EN.position);
   }
 
-  set bgEn(bit) {
-    this.setBit(RegisterLCDC.#BIT_FIELD.BG_EN.position, bit);
+  set bgwEnPr(bit) {
+    this.setBit(RegisterLCDC.#BIT_FIELD.BGW_EN_PR.position, bit);
   }
 
   set objEn(bit) {
@@ -79,13 +79,13 @@ export class RegisterLCDC extends Uint8 {
   }
 
   static #BIT_FIELD = {
-       BG_EN: { position: 0, isReadable: true, isWritable: true, valueAfterReset: 0 },
-      OBJ_EN: { position: 1, isReadable: true, isWritable: true, valueAfterReset: 0 },
-    OBJ_SIZE: { position: 2, isReadable: true, isWritable: true, valueAfterReset: 0 },
-      BG_MAP: { position: 3, isReadable: true, isWritable: true, valueAfterReset: 0 },
-    TILE_SEL: { position: 4, isReadable: true, isWritable: true, valueAfterReset: 0 },
-      WIN_EN: { position: 5, isReadable: true, isWritable: true, valueAfterReset: 0 },
-     WIN_MAP: { position: 6, isReadable: true, isWritable: true, valueAfterReset: 0 },
-      LCD_EN: { position: 7, isReadable: true, isWritable: true, valueAfterReset: 0 },
+    BGW_EN_PR: { position: 0, isReadable: true, isWritable: true, valueAfterReset: 0 },
+       OBJ_EN: { position: 1, isReadable: true, isWritable: true, valueAfterReset: 0 },
+     OBJ_SIZE: { position: 2, isReadable: true, isWritable: true, valueAfterReset: 0 },
+       BG_MAP: { position: 3, isReadable: true, isWritable: true, valueAfterReset: 0 },
+     TILE_SEL: { position: 4, isReadable: true, isWritable: true, valueAfterReset: 0 },
+       WIN_EN: { position: 5, isReadable: true, isWritable: true, valueAfterReset: 0 },
+      WIN_MAP: { position: 6, isReadable: true, isWritable: true, valueAfterReset: 0 },
+       LCD_EN: { position: 7, isReadable: true, isWritable: true, valueAfterReset: 0 },
   };
 }
