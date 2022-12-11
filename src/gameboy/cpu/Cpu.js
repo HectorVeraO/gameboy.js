@@ -33,10 +33,10 @@ export class Cpu {
     const instruction = this.decode(opcode);
     assertType(instruction, Instruction, `No instruction defined for opcode ${hexStr(opcode)}`);
 
-    this.#cyclesLeft = instruction.cycles;
-    while (this.#cyclesLeft >= 0) {
-      this.clock();
-    }
+    const extraCycles = instruction.execute();
+    const cycleCount = instruction.cycles + extraCycles;
+    
+    return cycleCount;
   }
 
   clock() {
@@ -47,7 +47,7 @@ export class Cpu {
     
     const opcode = this.opcode();
     const instruction = this.decode(opcode);
-    instruction.execute();
+    this.#cyclesLeft += instruction.execute();
   }
 
   /**
@@ -133,6 +133,33 @@ export class Cpu {
   #L = new Uint8();
   #F = new RegisterF();
 
+  #registersStack = [];
+
+  #saveRegisters() {
+    this.#registersStack.push({
+      A: this.#A,
+      B: this.#B,
+      C: this.#C,
+      D: this.#D,
+      E: this.#E,
+      H: this.#H,
+      L: this.#L,
+      F: this.#F,
+    });
+  }
+
+  #restoreRegisters() {
+    const state = this.#registersStack.pop();
+    this.#A = state.A;
+    this.#B = state.B;
+    this.#C = state.C;
+    this.#D = state.D;
+    this.#E = state.E;
+    this.#H = state.H;
+    this.#L = state.L;
+    this.#F = state.F;
+  }
+
   //#endregion
 
   //#region 16-bit registers
@@ -141,7 +168,16 @@ export class Cpu {
   #SP;
 
   /** Program counter */
-  #PC;
+
+  #ProgramCounter = 0;
+
+  get #PC() {
+    return this.#ProgramCounter;
+  }
+
+  set #PC(word) {
+    this.#ProgramCounter = word & 0xFFFF;
+  }
   //#endregion
 
   //#region Composed registers
@@ -234,7 +270,7 @@ export class Cpu {
     const instructions = [
       new Instruction({ opcode: 0x20, cycles: 8 , mnemonic: 'JR NZ, r8'   , byteLength: 2, fn: implementationOf[0x20] }), //  +4 cycles if branch is taken
       new Instruction({ opcode: 0x30, cycles: 8 , mnemonic: 'JR NC, r8'   , byteLength: 2, fn: implementationOf[0x30] }), //  +4 cycles if branch is taken
-      new Instruction({ opcode: 0x18, cycles: 8 , mnemonic: 'JR r8'       , byteLength: 2, fn: implementationOf[0x18] }), //  +4 cycles if branch is taken
+      new Instruction({ opcode: 0x18, cycles: 12, mnemonic: 'JR r8'       , byteLength: 2, fn: implementationOf[0x18] }), // Unconditional branching
       new Instruction({ opcode: 0x28, cycles: 8 , mnemonic: 'JR Z, r8'    , byteLength: 2, fn: implementationOf[0x28] }), //  +4 cycles if branch is taken
       new Instruction({ opcode: 0x38, cycles: 8 , mnemonic: 'JR C, r8'    , byteLength: 2, fn: implementationOf[0x38] }), //  +4 cycles if branch is taken
       new Instruction({ opcode: 0xC0, cycles: 8 , mnemonic: 'RET NZ'      , byteLength: 1, fn: implementationOf[0xC0] }), // +12 cycles if branch is taken
@@ -842,10 +878,136 @@ export class Cpu {
   }
 
   #getJCImplementationByOpcode() {
-    return {
-      0x00: () => {
+    const extendByteSign = (byte) => byte << 24 >> 24;
 
-      },
+    const operand = () => this.operand();
+    const operand16 = () => (operand() << 8) | operand();
+
+    const signedOperand = () => extendByteSign(operand());
+
+    const popStack = () => this.#pop();
+    const pushStack = (word) => this.#push(word);
+
+    const saveRegisters = () => this.#saveRegisters();
+    const restoreRegisters = () => this.#restoreRegisters();
+
+    const isZeroFlagDisabled = () => this.#F.Z === 0;
+    const isZeroFlagEnabled = () => this.#F.Z;
+    const isCarryFlagDisabled = () => this.#F.C === 0;
+    const isCarryFlagEnabled = () => this.#F.C;
+
+    /** @type {(address: uint16) => void} */
+    const jumpTo = (address) => {
+      this.#PC = address; 
+    };
+
+    /** @type {(predicate: () => boolean) => uint8 | undefined} */
+    const jumpIf = (predicate) => {
+      const address = operand16();
+      if (predicate()) {
+        this.#PC = address;
+        return 4;
+      }
+    };
+
+    /** @type {(offset: int8) => void} */
+    const relativeJumpBy = (offset) => {
+      this.#PC += offset;
+    };
+
+    /** @type {(predicate: () => boolean) => uint8 | undefined} */
+    const relativeJumpIf = (predicate) => {
+      const offset = signedOperand();
+      if (predicate()) {
+        this.#PC += offset;
+        return 4;
+      }
+    };
+
+
+    const returnUnconditionally = () => {
+      this.#PC = popStack();
+    };
+
+    /** @type {(predicate: () => boolean) => uint8 | undefined} */
+    const returnIf = (predicate) => {
+      if (predicate()) {
+        this.#PC = popStack();
+        return 12;
+      }
+    };
+
+    const returnFromInterrupt = () => {
+      restoreRegisters();
+      this.#PC = popStack();
+      this.#IME = 1;
+    };
+
+    /** @type {(address: uint16) => void} */
+    const callTo = (address) => {
+      pushStack(this.#PC);
+      this.#PC = address;
+    };
+    
+    /** @type {(predicate: () => boolean) => uint8 | undefined} */
+    const callIf = (predicate) => {
+      const address = operand16()
+      if (predicate()) {
+        pushStack(this.#PC);
+        this.#PC = address;
+        return 12;
+      }
+    };
+
+    const restartAt = (byte) => {
+      saveRegisters();
+      pushStack(this.#PC);
+      this.#PC = byte & 0xFF; // Page zero
+    };
+
+    return {
+      0x20: () => { return relativeJumpIf( isZeroFlagDisabled() ); },
+      0x30: () => { return relativeJumpIf( isCarryFlagDisabled() ); },
+
+      0x18: () => { return relativeJumpBy( signedOperand() ); },
+      0x28: () => { return relativeJumpIf( isZeroFlagEnabled() ); },
+      0x38: () => { return relativeJumpIf( isCarryFlagEnabled() ); },
+
+      0xC0: () => { return returnIf( isZeroFlagDisabled() ); },
+      0xD0: () => { return returnIf( isCarryFlagDisabled() ); },
+
+      0xC2: () => { return jumpIf( isZeroFlagDisabled() ); },
+      0xD2: () => { return jumpIf( isCarryFlagDisabled() ); },
+
+      0xC3: () => { return jumpTo( operand16() ); },
+
+      0xC4: () => { return callIf( isZeroFlagDisabled() ); },
+      0xD4: () => { return callIf( isCarryFlagDisabled() ); },
+
+      0xC7: () => { return restartAt( 0x00 ); },
+      0xD7: () => { return restartAt( 0x10 ); },
+      0xE7: () => { return restartAt( 0x20 ); },
+      0xF7: () => { return restartAt( 0x30 ); },
+
+      0xC8: () => { return returnIf( isZeroFlagEnabled() ); },
+      0xD8: () => { return returnIf( isCarryFlagEnabled() ); },
+
+      0xC9: () => { return returnUnconditionally(); },
+      0xD9: () => { return returnFromInterrupt(); },
+      0xE9: () => { return jumpTo( this.#HL ); },
+
+      0xCA: () => { return jumpIf( isZeroFlagEnabled() ); },
+      0xDA: () => { return jumpIf( isCarryFlagEnabled() ); },
+
+      0xCC: () => { return callIf( isZeroFlagEnabled() ); },
+      0xDC: () => { return callIf( isCarryFlagEnabled() ); },
+
+      0xCD: () => { return callTo( operand16() ); },
+
+      0xCF: () => { return restartAt( 0x08 ); },
+      0xDF: () => { return restartAt( 0x18 ); },
+      0xEF: () => { return restartAt( 0x28 ); },
+      0xFF: () => { return restartAt( 0x38 ); },
     };
   }
 
@@ -990,7 +1152,7 @@ export class Cpu {
     const loadRegisterAF = (word) => this.#AF = word;
 
     const popStack = () => this.#pop();
-    const pushStack = (word) => this.pushStack(word);
+    const pushStack = (word) => this.#push(word);
 
     return {
       0x01: () => { loadRegisterBC( operand16() ) },
