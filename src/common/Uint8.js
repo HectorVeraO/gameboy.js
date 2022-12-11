@@ -5,6 +5,14 @@ export class Uint8 {
     this.set(value);
   }
 
+  increment(amount = 1) {
+    this.set(this + amount);
+  }
+
+  decrement(amount = 1) {
+    this.set(this - amount);
+  }
+
   set(value) {
     this.#value = value & 0xFF;
   }
