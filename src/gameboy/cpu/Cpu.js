@@ -1104,41 +1104,41 @@ export class Cpu {
     };
 
     return {
-      0x20: () => { return relativeJumpIf( isZeroFlagDisabled() ); },
-      0x30: () => { return relativeJumpIf( isCarryFlagDisabled() ); },
+      0x20: () => { return relativeJumpIf( isZeroFlagDisabled ); },
+      0x30: () => { return relativeJumpIf( isCarryFlagDisabled ); },
 
       0x18: () => { return relativeJumpBy( signedOperand() ); },
-      0x28: () => { return relativeJumpIf( isZeroFlagEnabled() ); },
-      0x38: () => { return relativeJumpIf( isCarryFlagEnabled() ); },
+      0x28: () => { return relativeJumpIf( isZeroFlagEnabled ); },
+      0x38: () => { return relativeJumpIf( isCarryFlagEnabled ); },
 
-      0xC0: () => { return returnIf( isZeroFlagDisabled() ); },
-      0xD0: () => { return returnIf( isCarryFlagDisabled() ); },
+      0xC0: () => { return returnIf( isZeroFlagDisabled ); },
+      0xD0: () => { return returnIf( isCarryFlagDisabled ); },
 
-      0xC2: () => { return jumpIf( isZeroFlagDisabled() ); },
-      0xD2: () => { return jumpIf( isCarryFlagDisabled() ); },
+      0xC2: () => { return jumpIf( isZeroFlagDisabled ); },
+      0xD2: () => { return jumpIf( isCarryFlagDisabled ); },
 
       0xC3: () => { return jumpTo( operand16() ); },
 
-      0xC4: () => { return callIf( isZeroFlagDisabled() ); },
-      0xD4: () => { return callIf( isCarryFlagDisabled() ); },
+      0xC4: () => { return callIf( isZeroFlagDisabled ); },
+      0xD4: () => { return callIf( isCarryFlagDisabled ); },
 
       0xC7: () => { return restartAt( 0x00 ); },
       0xD7: () => { return restartAt( 0x10 ); },
       0xE7: () => { return restartAt( 0x20 ); },
       0xF7: () => { return restartAt( 0x30 ); },
 
-      0xC8: () => { return returnIf( isZeroFlagEnabled() ); },
-      0xD8: () => { return returnIf( isCarryFlagEnabled() ); },
+      0xC8: () => { return returnIf( isZeroFlagEnabled ); },
+      0xD8: () => { return returnIf( isCarryFlagEnabled ); },
 
       0xC9: () => { return returnUnconditionally(); },
       0xD9: () => { return returnFromInterrupt(); },
       0xE9: () => { return jumpTo( this.#HL ); },
 
-      0xCA: () => { return jumpIf( isZeroFlagEnabled() ); },
-      0xDA: () => { return jumpIf( isCarryFlagEnabled() ); },
+      0xCA: () => { return jumpIf( isZeroFlagEnabled ); },
+      0xDA: () => { return jumpIf( isCarryFlagEnabled ); },
 
-      0xCC: () => { return callIf( isZeroFlagEnabled() ); },
-      0xDC: () => { return callIf( isCarryFlagEnabled() ); },
+      0xCC: () => { return callIf( isZeroFlagEnabled ); },
+      0xDC: () => { return callIf( isCarryFlagEnabled ); },
 
       0xCD: () => { return callTo( operand16() ); },
 
