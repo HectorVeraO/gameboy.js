@@ -16,7 +16,7 @@ export class Instruction {
     return this.#byteLength;
   }
 
-  get execute() {
+  execute() {
     return this.#fn() || 0;
   }
 
