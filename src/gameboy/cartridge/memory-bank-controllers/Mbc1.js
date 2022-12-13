@@ -18,7 +18,7 @@ export class Mbc1 {
    * @param {Uint8Array} bytes 
    */
   constructor(header, bytes) {
-    this.#romBankCount = ROM_SIZES[header.romSize];
+    this.#romBankCount = ROM_SIZES[header.romSize].bankCount;
     // this.#rom = new Uint8Array(ROM_BANK_CAPACITY / byte * this.#romBankCount);
     this.#rom = new Uint8Array(bytes); // TODO: Not sure about this
     console.log(`Requested ROM size ${ROM_BANK_CAPACITY / byte * this.#romBankCount} bytes`);
@@ -30,6 +30,7 @@ export class Mbc1 {
     this.#romBankSelectionMask = MASK_BY_BIT_WIDTH[romBankCountBitWidth];
     this.#extendedRomMode = this.#romBankCount > 32;
 
+    // TODO: Some gamepaks (e.g. Blarg's CPU instruction tests do not use RAM, handle this case)
     this.#ramBankCount = this.#extendedRomMode ? 1 : RAM_SIZES[header.ramSize];
     this.#ram = new Uint8Array(RAM_BANK_CAPACITY / byte * this.#ramBankCount);
 
