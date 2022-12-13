@@ -4,6 +4,7 @@ import { Uint8 } from "@common/Uint8";
  * Memory mapped register, STAT or PPU status register, resides in the I/O region, its address is 0xFF41
  */
 export class RegisterSTAT extends Uint8 {
+  static ADDRESS = 0xFF41;
 
   constructor() {
     super();

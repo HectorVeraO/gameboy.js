@@ -4,6 +4,7 @@ import { Uint8 } from "@common/Uint8";
  * Memory mapped register, LCDC or PPU control register, resides in the I/O region, its address is 0xFF40
  */
 export class RegisterLCDC extends Uint8 {
+  static ADDRESS = 0xFF40;
 
   constructor() {
     super();

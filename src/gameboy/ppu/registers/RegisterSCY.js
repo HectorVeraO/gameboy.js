@@ -4,6 +4,7 @@ import { Uint8 } from "@common/Uint8";
  * Memory mapped register, SCY or Vertical scroll register, resides in the I/O region, its address is 0xFF42
  */
 export class RegisterSCY extends Uint8 {
+  static ADDRESS = 0xFF42;
 
   constructor() {
     super();

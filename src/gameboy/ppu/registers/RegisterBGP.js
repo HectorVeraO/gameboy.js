@@ -5,6 +5,7 @@ import { Uint8 } from "@common/Uint8";
  * resides in the I/O region, its address is 0xFF47
  */
 export class RegisterBGP extends Uint8 {
+  static ADDRESS = 0xFF47;
 
   constructor() {
     super();

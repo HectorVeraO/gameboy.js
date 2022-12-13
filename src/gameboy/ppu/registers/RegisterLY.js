@@ -4,6 +4,7 @@ import { Uint8 } from "@common/Uint8";
  * Memory mapped register, LY or Vertical scroll register, resides in the I/O region, its address is 0xFF44
  */
 export class RegisterLY extends Uint8 {
+  static ADDRESS = 0xFF44;
 
   constructor() {
     super();

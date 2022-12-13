@@ -6,6 +6,8 @@ import { RegisterLYC } from "./registers/RegisterLYC";
 import { RegisterSCX } from "./registers/RegisterSCX";
 import { RegisterSCY } from "./registers/RegisterSCY";
 import { RegisterSTAT } from "./registers/RegisterSTAT";
+import { RegisterWX } from "./registers/RegisterWX";
+import { RegisterWY } from "./registers/RegisterWY";
 
 const MONOCHROME_COLOR_BY_VALUE = {
   0: { value: 0, pixel: 'Off'   , rgb: 0xFFFFFF },
@@ -26,12 +28,49 @@ export class Ppu {
     /** Proctects reads of regions managed by PPU  */
     guardRead(address) {
       // TODO: Return null if address isn't managed by PPU
+      if (address < 0xFF40 || address > 0xFF45)
+        return null;
       // TODO: Return spec compliant value if address is managed by PPU
+      if (address === RegisterLCDC.ADDRESS)
+        return this.#LCDC;
+      if (address === RegisterSTAT.ADDRESS)
+        return this.#STAT;
+      if (address === RegisterSCY.ADDRESS)
+        return this.#SCY;
+      if (address === RegisterSCX.ADDRESS)
+        return this.#SCX;
+      if (address === RegisterLY.ADDRESS)
+        return this.#LY;
+      if (address === RegisterLYC.ADDRESS)
+        return this.#LYC;
+      if (address === RegisterWY.ADDRESS)
+        return this.#WY;
+      if (address === RegisterWX.ADDRESS)
+        return this.#WX;
     }
   
     guardWrite(address, byte) {
-      // TODO: Return false if address isn't manged by PPU
-      // TODO: Return true if address is managed by PPU and handle write as specified
+      let writePerformed = true
+      if (address === RegisterLCDC.ADDRESS)
+        this.#LCDC = byte;
+      else if (address === RegisterSTAT.ADDRESS)
+        this.#STAT = byte;
+      else if (address === RegisterSCY.ADDRESS)
+        this.#SCY = byte;
+      else if (address === RegisterSCX.ADDRESS)
+        this.#SCX = byte;
+      else if (address === RegisterLY.ADDRESS)
+        this.#LY = byte;
+      else if (address === RegisterLYC.ADDRESS)
+        this.#LYC = byte;
+      else if (address === RegisterWY.ADDRESS)
+        this.#WY = byte;
+      else if (address === RegisterWX.ADDRESS)
+        this.#WX = byte;
+      else
+        writePerformed = false;
+      
+      return writePerformed;
     }
 
   reset() {
@@ -42,8 +81,8 @@ export class Ppu {
     this.#LY = new RegisterLY();
     this.#LYC = new RegisterLYC();
     this.#BGP = new RegisterBGP();
-    this.#WX = new Uint8();
-    this.#WY = new Uint8();
+    this.#WX = new RegisterWX();
+    this.#WY = new RegisterWY();
 
     this.#dotCount = 0;
     this.#modeDotCount = 0;
@@ -65,7 +104,7 @@ export class Ppu {
           const isLastVisibleLine = this.#LY === Ppu.#FRAME_PIXEL_HEIGHT - 1;
           if (isLastVisibleLine) {
             this.#STAT.lcdMode = VBlank;
-            // TODO: Emit framebuffer
+            return this.#frameBuffer; // TODO: Improve frame emission
           } else {
             this.#STAT.lcdMode = SearchingOAM;
           }
@@ -103,15 +142,91 @@ export class Ppu {
     }
   }
 
-  #LCDC = new RegisterLCDC();
-  #STAT = new RegisterSTAT();
-  #SCY = new RegisterSCY();
-  #SCX = new RegisterSCX();
-  #LY = new RegisterLY();
-  #LYC = new RegisterLYC();
-  #BGP = new RegisterBGP();
-  #WX = new Uint8();
-  #WY = new Uint8();
+  #register = {
+    LCDC: new RegisterLCDC(),
+    STAT: new RegisterSTAT(),
+    SCY: new RegisterSCY(),
+    SCX: new RegisterSCX(),
+    LY: new RegisterLY(),
+    LYC: new RegisterLYC(),
+    BGP: new RegisterBGP(),
+    WX: new RegisterWX(),
+    WY: new RegisterWY(),
+  };
+
+  get #LCDC() {
+    return this.#register.LCDC;
+  }
+
+  get #STAT() {
+    return this.#register.STAT;
+  }
+
+  get #SCY() {
+    return this.#register.SCY;
+  }
+
+  get #SCX() {
+    return this.#register.SCX;
+  }
+
+  get #LY() {
+    return this.#register.LY;
+  }
+
+  get #LYC() {
+    return this.#register.LYC;
+  }
+
+  get #BGP() {
+    return this.#register.BGP;
+  }
+
+  get #WX() {
+    return this.#register.WX;
+  }
+
+  get #WY() {
+    return this.#register.WY;
+  }
+
+  set #LCDC(byte) {
+    this.#LCDC.set(byte)
+  }
+  
+  set #STAT(byte) {
+    this.#STAT.set(byte)
+  }
+  
+  set #SCY(byte) {
+    this.#SCY.set(byte)
+  }
+  
+  set #SCX(byte) {
+    this.#SCX.set(byte)
+  }
+  
+  set #LY(byte) {
+    this.#LY.set(byte)
+  }
+  
+  set #LYC(byte) {
+    this.#LYC.set(byte)
+  }
+  
+  set #BGP(byte) {
+    this.#BGP.set(byte)
+  }
+  
+  set #WX(byte) {
+    this.#WX.set(byte)
+  }
+  
+  set #WY(byte) {
+    this.#WY.set(byte)
+  }
+  
+
 
   #dotCount = 0;
   #modeDotCount = 0;
