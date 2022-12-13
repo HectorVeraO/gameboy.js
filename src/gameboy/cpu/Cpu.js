@@ -90,7 +90,8 @@ export class Cpu {
   }
 
   reset() {
-    this.#PC = 0;
+    // TODO: Should start at 0x0000 to let Nintendo do its boot sequence, but it's not implemented yet, handling the memory mapped register 0xFF50 is required
+    this.#PC = 0x0100;
     this.#A = 0;
     this.#B = 0;
     this.#C = 0;
@@ -99,7 +100,7 @@ export class Cpu {
     this.#H = 0;
     this.#L = 0;
     this.#F = 0;
-    this.#SP = null; // TODO: Check initial value
+    this.#SP = 0;
     this.#cycleCount = 0;
   }
 
@@ -179,14 +180,81 @@ export class Cpu {
 
   //#region 8-bit registers
 
-  #A = new Uint8();
-  #B = new Uint8();
-  #C = new Uint8();
-  #D = new Uint8();
-  #E = new Uint8();
-  #H = new Uint8();
-  #L = new Uint8();
-  #F = new RegisterF();
+  #register = {
+    A: new Uint8(),
+    B: new Uint8(),
+    C: new Uint8(),
+    D: new Uint8(),
+    E: new Uint8(),
+    H: new Uint8(),
+    L: new Uint8(),
+    F: new RegisterF(),
+  };
+
+  get #A() {
+    return this.#register.A;
+  }
+
+  get #B() {
+    return this.#register.B;
+  }
+
+  get #C() {
+    return this.#register.C;
+  }
+
+  get #D() {
+    return this.#register.D;
+  }
+
+  get #E() {
+    return this.#register.E;
+  }
+
+  get #H() {
+    return this.#register.H;
+  }
+
+  get #L() {
+    return this.#register.L;
+  }
+
+  get #F() {
+    return this.#register.F;
+  }
+
+  set #A(byte) {
+    this.#register.A.set(byte);
+  }
+
+  set #B(byte) {
+    this.#register.B.set(byte);
+  }
+
+  set #C(byte) {
+    this.#register.C.set(byte);
+  }
+
+  set #D(byte) {
+    this.#register.D.set(byte);
+  }
+
+  set #E(byte) {
+    this.#register.E.set(byte);
+  }
+
+  set #H(byte) {
+    this.#register.H.set(byte);
+  }
+
+  set #L(byte) {
+    this.#register.L.set(byte);
+  }
+
+  set #F(byte) {
+    this.#register.F.set(byte);
+  }
+
 
   #registersStack = [];
 
@@ -223,7 +291,15 @@ export class Cpu {
   //#region 16-bit registers
 
   /** Stack pointer */
-  #SP;
+  #StackPointer = 0;
+
+  get #SP() {
+    return this.#StackPointer;
+  }
+
+  set #SP(word) {
+    this.#StackPointer = word & 0xFFFF;
+  }
 
   /** Program counter */
 
@@ -939,7 +1015,11 @@ export class Cpu {
     const extendByteSign = (byte) => byte << 24 >> 24;
 
     const operand = () => this.operand();
-    const operand16 = () => (operand() << 8) | operand();
+    const operand16 = () => {
+      const lowByte = operand();
+      const highByte = operand();
+      return (highByte << 8) | lowByte;
+    };
 
     const signedOperand = () => extendByteSign(operand());
 
@@ -1074,7 +1154,11 @@ export class Cpu {
     const loadMemory = (address, byte) => this.#write(address, byte);
 
     const operand = () => this.operand();
-    const operand16 = () => (operand() << 8) | operand();
+    const operand16 = () => {
+      const lowByte = operand();
+      const highByte = operand();
+      return (highByte << 8) | lowByte;
+    };
     
     const readHRAM = (addressLowByte) => this.#read(0xFF00 | addressLowByte);
     const loadHRAM = (addressLowByte, byte) => this.#write(0xFF00 | addressLowByte, byte)
@@ -1201,7 +1285,11 @@ export class Cpu {
     const loadMemory = (address, byte) => this.#write(address, byte);
 
     const operand = () => this.operand();
-    const operand16 = () => (operand() << 8) | operand();
+    const operand16 = () => {
+      const lowByte = operand();
+      const highByte = operand();
+      return (highByte << 8) | lowByte;
+    };
 
     const loadRegisterBC = (word) => this.#BC = word;
     const loadRegisterDE = (word) => this.#DE = word;
