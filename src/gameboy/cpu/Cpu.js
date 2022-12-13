@@ -1330,13 +1330,13 @@ export class Cpu {
 
     const operand = () => this.operand();
     
-    const incrementA = () => { const previous = this.#A++; this.#F.Z = this.#A === 0; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF)); };
-    const incrementB = () => { const previous = this.#B++; this.#F.Z = this.#B === 0; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF)); };
-    const incrementC = () => { const previous = this.#C++; this.#F.Z = this.#C === 0; this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF)); };
-    const incrementD = () => { const previous = this.#D++; this.#F.Z = this.#D === 0; this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF)); };
-    const incrementE = () => { const previous = this.#E++; this.#F.Z = this.#E === 0; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF)); };
-    const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H === 0; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF)); };
-    const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L === 0; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF)); };
+    const incrementA = () => { const previous = this.#A++; this.#F.Z = this.#A.equals(0); this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF)); };
+    const incrementB = () => { const previous = this.#B++; this.#F.Z = this.#B.equals(0); this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF)); };
+    const incrementC = () => { const previous = this.#C++; this.#F.Z = this.#C.equals(0); this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF)); };
+    const incrementD = () => { const previous = this.#D++; this.#F.Z = this.#D.equals(0); this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF)); };
+    const incrementE = () => { const previous = this.#E++; this.#F.Z = this.#E.equals(0); this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF)); };
+    const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H.equals(0); this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF)); };
+    const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L.equals(0); this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF)); };
 
     const decrementA = () => this.#A++;
     const decrementB = () => this.#B++;
@@ -1398,7 +1398,7 @@ export class Cpu {
         add: (byte) => {    
           const oldA = this.#A;
           this.#A += byte;
-          this.#F.Z = this.#A === 0;
+          this.#F.Z = this.#A.equals(0);
           this.#F.N = 0;
           this.#F.H = hasHalfCarry(oldA, byte);
           this.#F.C = hasCarry(oldA, byte);
@@ -1406,21 +1406,21 @@ export class Cpu {
         sub: (byte) => {    
           const oldA = this.#A;
           this.#A -= byte;
-          this.#F.Z = this.#A === 0;
+          this.#F.Z = this.#A.equals(0);
           this.#F.N = 1;
           this.#F.H = hasHalfCarry(oldA, byte);
           this.#F.C = hasCarry(oldA, byte);
         },
         and: (byte) => {    
           this.#A &= byte;
-          this.#F.Z = this.#A === 0;
+          this.#F.Z = this.#A.equals(0);
           this.#F.N = 0;
           this.#F.H = 1;
           this.#F.C = 0;
         },
         or: (byte) => {    
           this.#A |= byte;
-          this.#F.Z = this.#A === 0;
+          this.#F.Z = this.#A.equals(0);
           this.#F.N = 0;
           this.#F.H = 0;
           this.#F.C = 0;
@@ -1429,7 +1429,7 @@ export class Cpu {
         sbc: (byte) => register.A.sub(byte - this.#F.C),
         xor: (byte) => {
           this.#A ^= byte;
-          this.#F.Z = this.#A === 0;
+          this.#F.Z = this.#A.equals(0);
           this.#F.N = 0;
           this.#F.H = 0;
           this.#F.C = 0;

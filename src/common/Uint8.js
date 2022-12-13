@@ -56,6 +56,10 @@ export class Uint8 {
     const boundedValue = value & rangeMask;
     this.#value = (this & ~(rangeMask << position)) | (boundedValue << position);
   }
+  
+  equals(rhs) {
+    return this.valueOf() === rhs;
+  }
 
   valueOf() {
     return this.#value;
