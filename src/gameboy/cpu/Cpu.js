@@ -33,6 +33,28 @@ export class Cpu {
   constructor({ read, write }) {
     this.#read = read;
     this.#write = write;
+
+    const mapByOpcode = (instructions) => instructions.reduce(
+      (dict, instruction) => {
+        dict[instruction.opcode] = instruction;
+        return dict;
+      },
+      {},
+    );
+    
+    // TODO: Handle prefix CB opcodes in a differnt map
+    this.#instructionByOpcode = {
+      ...mapByOpcode(this.#getMCInstructions()),
+      ...mapByOpcode(this.#getJCInstructions()),
+      ...mapByOpcode(this.#getLSM8bitInstructions()),
+      ...mapByOpcode(this.#getLSM16bitInstructions()),
+      ...mapByOpcode(this.#getAL8bitInstructions()),
+      ...mapByOpcode(this.#getAL16bitInstructions()),
+      ...mapByOpcode(this.#getR8bitInstructions()),
+    };
+    this.#cbInstructionByOpcode = {
+      ...mapByOpcode(this.#getPrefixCBInstructions()),
+    };
   }
 
   /** Proctects reads of regions managed by CPU  */
@@ -53,7 +75,6 @@ export class Cpu {
 
     const extraCycles = instruction.execute();
     const cycleCount = instruction.cycles + extraCycles;
-    
     return cycleCount;
   }
 
@@ -126,7 +147,8 @@ export class Cpu {
    * @returns {Instruction}
    */
   decode(opcode) {
-    return this.#instructionByOpcode[opcode];
+    const instructionFrom = opcode === 0xCB ? this.#cbInstructionByOpcode : this.#instructionByOpcode;
+    return instructionFrom[opcode];
   }
 
   //#region State (not from spec)
@@ -153,6 +175,7 @@ export class Cpu {
   //#endregion
 
   #instructionByOpcode = {};
+  #cbInstructionByOpcode = {};
 
   //#region 8-bit registers
 
@@ -178,6 +201,9 @@ export class Cpu {
       L: this.#L,
       F: this.#F,
     });
+    if (this.#registersStack.length > 100) {
+      this.#registersStack.shift();
+    }
   }
 
   #restoreRegisters() {
@@ -551,7 +577,7 @@ export class Cpu {
 
   //#region 16-bit Arithmetic instructions
 
-  #get16bitArithmeticInstructions() {
+  #getAL16bitInstructions() {
     const implementationOf = this.#getAL16bitImplementationByOpcode();
     const instructions = [
       new Instruction({ opcode: 0x03, cycles: 8 , mnemonic: 'INC BC'    , byteLength: 1, fn: implementationOf[0x03] }),
@@ -599,7 +625,7 @@ export class Cpu {
 
   //#region 8-bit rotations
 
-  #getR8bitOperations() {
+  #getR8bitInstructions() {
     const implementationOf = this.#getR8bitImplementationByOpcode();
     const instructions = [
       new Instruction({ opcode: 0x07, cycles: 4, mnemonic: 'RLCA', byteLength: 1, fn: implementationOf[0x07] }),
@@ -616,7 +642,7 @@ export class Cpu {
 
   //#region Prefix CB operations for 8-bit rotations, shifts and bit instructions
 
-  #getPrefixCBOperations() {
+  #getPrefixCBInstructions() {
     const implementationOf = this.#getPrefixCBOperationByOpcode();
     const instructions = [
       new Instruction({ opcode: 0x00, cycles: 8 , mnemonic: 'RLC B'      , byteLength: 2, fn: implementationOf[0x00] }),
@@ -1662,9 +1688,9 @@ export class Cpu {
          sra: () => { this.#B = sra(this.#B); },
         swap: () => { this.#B = swap(this.#B); },
          srl: () => { this.#B = srl(this.#B); },
-         bit: () => { bit(this.#B); },
-         set: () => { this.#B = set(this.#B); },
-         res: () => { this.#B = res(this.#B); },
+         res: (position) => () => { this.#B = res(this.#B)(position); },
+         bit: (position) => () => bit(this.#B)(position),
+         set: (position) => () => { this.#B = set(this.#B)(position); },
       },
       C: {
         rlc: () => { this.#C = rlc(this.#C); },
@@ -1675,9 +1701,9 @@ export class Cpu {
         sra: () => { this.#C = sra(this.#C); },
        swap: () => { this.#C = swap(this.#C); },
         srl: () => { this.#C = srl(this.#C); },
-        bit: () => { bit(this.#C); },
-        set: () => { this.#C = set(this.#C); },
-        res: () => { this.#C = res(this.#C); },
+        res: (position) => () => { this.#C = res(this.#C)(position); },
+        bit: (position) => () => bit(this.#C)(position),
+        set: (position) => () => { this.#C = set(this.#C)(position); },
       },
       D: {
          rlc: () => { this.#D = rlc(this.#D); },
@@ -1688,9 +1714,9 @@ export class Cpu {
          sra: () => { this.#D = sra(this.#D); },
         swap: () => { this.#D = swap(this.#D); },
          srl: () => { this.#D = srl(this.#D); },
-         bit: () => { bit(this.#D); },
-         set: () => { this.#D = set(this.#D); },
-         res: () => { this.#D = res(this.#D); },
+         res: (position) => () => { this.#D = res(this.#D)(position); },
+         bit: (position) => () => bit(this.#D)(position),
+         set: (position) => () => { this.#D = set(this.#D)(position); },
       },
       E: {
         rlc: () => { this.#E = rlc(this.#E); },
@@ -1701,9 +1727,9 @@ export class Cpu {
         sra: () => { this.#E = sra(this.#E); },
        swap: () => { this.#E = swap(this.#E); },
         srl: () => { this.#E = srl(this.#E); },
-        bit: () => { bit(this.#E); },
-        set: () => { this.#E = set(this.#E); },
-        res: () => { this.#E = res(this.#E); },
+        res: (position) => () => { this.#E = res(this.#E)(position); },
+        bit: (position) => () => bit(this.#E)(position),
+        set: (position) => () => { this.#E = set(this.#E)(position); },
       },
       H: {
         rlc: () => { this.#H = rlc(this.#H); },
@@ -1714,9 +1740,9 @@ export class Cpu {
         sra: () => { this.#H = sra(this.#H); },
        swap: () => { this.#H = swap(this.#H); },
         srl: () => { this.#H = srl(this.#H); },
-        bit: () => { bit(this.#H); },
-        set: () => { this.#H = set(this.#H); },
-        res: () => { this.#H = res(this.#H); },
+        res: (position) => () => { this.#H = res(this.#H)(position); },
+        bit: (position) => () => bit(this.#H)(position),
+        set: (position) => () => { this.#H = set(this.#H)(position); },
       },
       L: {
         rlc: () => { this.#L = rlc(this.#L); },
@@ -1727,9 +1753,9 @@ export class Cpu {
         sra: () => { this.#L = sra(this.#L); },
        swap: () => { this.#L = swap(this.#L); },
         srl: () => { this.#L = srl(this.#L); },
-        bit: () => { bit(this.#L); },
-        set: () => { this.#L = set(this.#L); },
-        res: () => { this.#L = res(this.#L); },
+        res: (position) => () => { this.#L = res(this.#L)(position); },
+        bit: (position) => () => bit(this.#L)(position),
+        set: (position) => () => { this.#L = set(this.#L)(position); },
       },
       HL: {
         rlc: () => { writeMemory( rlc( readMemory(this.#HL) ) ); },
@@ -1740,9 +1766,9 @@ export class Cpu {
         sra: () => { writeMemory( sra( readMemory(this.#HL) ) ); },
        swap: () => { writeMemory( swap( readMemory(this.#HL) ) ); },
         srl: () => { writeMemory( srl( readMemory(this.#HL) ) ); },
-        bit: () => { bit( readMemory(this.#HL) ); },
-        set: () => { writeMemory( set( readMemory(this.#HL) ) ); },
-        res: () => { writeMemory( res( readMemory(this.#HL) ) ); },
+        res: (position) => () => { writeMemory( res(readMemory(this.#HL)(position)) ); },
+        bit: (position) => () => bit( readMemory(this.#HL)(position) ),
+        set: (position) => () => { writeMemory( set(readMemory(this.#HL))(position) ); },
       },
       A: {
         rlc: () => { this.#A = rlc(this.#A); },
@@ -1753,9 +1779,9 @@ export class Cpu {
         sra: () => { this.#A = sra(this.#A); },
        swap: () => { this.#A = swap(this.#A); },
         srl: () => { this.#A = srl(this.#A); },
-        bit: () => { bit(this.#A); },
-        set: () => { this.#A = set(this.#A); },
-        res: () => { this.#A = res(this.#A); },
+        res: (position) => () => { this.#A = res(this.#A)(position); },
+        bit: (position) => () => bit(this.#A)(position),
+        set: (position) => () => { this.#A = set(this.#A)(position); },
       },
     };
     
