@@ -51,20 +51,21 @@
   globalChecksum;
 
   constructor(gamepakBytes) {
-    this.bytes = gamepakBytes.slice(Header.#position, Header.#length);
-    this.entryPoint = gamepakBytes.slice(0x100, 0x4);
-    this.nintendoLogo = gamepakBytes.slice(0x104, 0x30);
-    this.title = gamepakBytes.slice(0x134, 0x10);
-    this.manufacturerCode = gamepakBytes.slice(0x13F, 0x4);
-    this.cgbFlag = gamepakBytes.slice(0x143, 0x1);
-    this.newLicenseeCode = gamepakBytes.slice(0x144, 0x2);
-    this.sgbFlag = gamepakBytes.slice(0x146, 0x1);
-    this.cartridgeType = gamepakBytes.slice(0x147, 0x1);
-    this.romSize = gamepakBytes.slice(0x148, 0x1);
-    this.ramSize = gamepakBytes.slice(0x149, 0x1);
-    this.destinationCode = gamepakBytes.slice(0x14A, 0x1);
-    this.oldLicenseeCode = gamepakBytes.slice(0x14B, 0x1);
-    this.maskRomVersionNumber = gamepakBytes.slice(0x14C, 0x1);
+    const slice = (collection, start, length) => collection.slice(start, (start + length));
+    this.bytes = slice(gamepakBytes, Header.#position, Header.#length);
+    this.entryPoint = slice(gamepakBytes, 0x100, 0x4);
+    this.nintendoLogo = slice(gamepakBytes, 0x104, 0x30);
+    this.title = slice(gamepakBytes, 0x134, 0x10);
+    this.manufacturerCode = slice(gamepakBytes, 0x13F, 0x4);
+    this.cgbFlag = gamepakBytes.at(0x143);
+    this.newLicenseeCode = slice(gamepakBytes, 0x144, 0x2);
+    this.sgbFlag = gamepakBytes.at(0x146);
+    this.cartridgeType = gamepakBytes.at(0x147);
+    this.romSize = gamepakBytes.at(0x148);
+    this.ramSize = gamepakBytes.at(0x149);
+    this.destinationCode = gamepakBytes.at(0x14A);
+    this.oldLicenseeCode = gamepakBytes.at(0x14B);
+    this.maskRomVersionNumber = gamepakBytes.at(0x14C);
   }
 
   /** Header address in the GamePak's ROM */
