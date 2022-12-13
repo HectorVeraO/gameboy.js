@@ -13,7 +13,7 @@ export class NoMbc {
    * @param {Uint8Array} bytes 
    */
   constructor(header, bytes) {
-    
+    // TODO: NoMbc and Mbc1, can I extract this away?
     this.#romBankCount = ROM_SIZES[header.romSize].bankCount;
     this.#rom = bytes.slice(0, this.#romBankCount * ROM_BANK_CAPACITY);
     console.log(`Requested ROM size ${ROM_BANK_CAPACITY / byte * this.#romBankCount} bytes`);
