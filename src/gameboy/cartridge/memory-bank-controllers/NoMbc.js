@@ -1,11 +1,28 @@
+import { byte } from "@common/constants/InformationUnits";
+import { RAM_BANK_CAPACITY, RAM_SIZES } from "@gameboy/constants/RamSizes";
+import { ROM_SIZES, ROM_BANK_CAPACITY } from "@gameboy/constants/RomSizes";
+import { Header } from "../Header";
+
 /**
  * 32 KiB ROM only
  * See: https://gbdev.io/pandocs/nombc.html
  */
 export class NoMbc {
-  constructor() {
-    this.#rom = new Uint8Array(32 * 2 ** 10);
-    this.#ram = new Uint8Array(8 * 2 ** 10);
+    /**
+   * @param {Header} header 
+   * @param {Uint8Array} bytes 
+   */
+  constructor(header, bytes) {
+    
+    this.#romBankCount = ROM_SIZES[header.romSize].bankCount;
+    this.#rom = bytes.slice(0, this.#romBankCount * ROM_BANK_CAPACITY);
+    console.log(`Requested ROM size ${ROM_BANK_CAPACITY / byte * this.#romBankCount} bytes`);
+    console.log(`GamePak size ${bytes.length} bytes`);
+
+    this.#ramBankCount = RAM_SIZES[header.ramSize].bankCount;
+    this.#ram = bytes.slice(this.#rom.length, this.#ramBankCount * RAM_BANK_CAPACITY);
+    console.log(`Requested RAM size ${RAM_BANK_CAPACITY / byte * this.#ramBankCount} bytes`);
+    console.log(`GamePak size ${bytes.length} bytes`);
   }
 
   read(address) {
@@ -30,4 +47,7 @@ export class NoMbc {
 
   #rom;
   #ram;
+
+  #romBankCount;
+  #ramBankCount;
 }
