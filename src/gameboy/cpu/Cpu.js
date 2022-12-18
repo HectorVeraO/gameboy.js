@@ -148,8 +148,13 @@ export class Cpu {
    * @returns {Instruction}
    */
   decode(opcode) {
-    const instructionFrom = opcode === 0xCB ? this.#cbInstructionByOpcode : this.#instructionByOpcode;
-    return instructionFrom[opcode];
+    let targetOpcode = opcode;
+    let instructionFrom = this.#instructionByOpcode;
+    if (opcode === 0xCB) {
+      targetOpcode = this.opcode();
+      instructionFrom = this.#cbInstructionByOpcode;
+    }
+    return instructionFrom[targetOpcode];
   }
 
   //#region State (not from spec)
@@ -507,6 +512,21 @@ export class Cpu {
       new Instruction({ opcode: 0x6D, cycles: 4 , mnemonic: 'LD L, L'    , byteLength: 1, fn: implementationOf[0x6D] }),
       new Instruction({ opcode: 0x6E, cycles: 4 , mnemonic: 'LD L, (HL)' , byteLength: 1, fn: implementationOf[0x6E] }),
       new Instruction({ opcode: 0x6F, cycles: 4 , mnemonic: 'LD L, A'    , byteLength: 1, fn: implementationOf[0x6F] }),
+      new Instruction({ opcode: 0x70, cycles: 8 , mnemonic: 'LD (HL), B' , byteLength: 1, fn: implementationOf[0x70] }),
+      new Instruction({ opcode: 0x71, cycles: 8 , mnemonic: 'LD (HL), C' , byteLength: 1, fn: implementationOf[0x71] }),
+      new Instruction({ opcode: 0x72, cycles: 8 , mnemonic: 'LD (HL), D' , byteLength: 1, fn: implementationOf[0x72] }),
+      new Instruction({ opcode: 0x73, cycles: 8 , mnemonic: 'LD (HL), E' , byteLength: 1, fn: implementationOf[0x73] }),
+      new Instruction({ opcode: 0x74, cycles: 8 , mnemonic: 'LD (HL), H' , byteLength: 1, fn: implementationOf[0x74] }),
+      new Instruction({ opcode: 0x75, cycles: 8 , mnemonic: 'LD (HL), L' , byteLength: 1, fn: implementationOf[0x75] }),
+      new Instruction({ opcode: 0x77, cycles: 8 , mnemonic: 'LD (HL), A' , byteLength: 1, fn: implementationOf[0x77] }),
+      new Instruction({ opcode: 0x78, cycles: 4 , mnemonic: 'LD A, B   ' , byteLength: 1, fn: implementationOf[0x78] }),
+      new Instruction({ opcode: 0x79, cycles: 4 , mnemonic: 'LD A, C   ' , byteLength: 1, fn: implementationOf[0x79] }),
+      new Instruction({ opcode: 0x7A, cycles: 4 , mnemonic: 'LD A, D   ' , byteLength: 1, fn: implementationOf[0x7A] }),
+      new Instruction({ opcode: 0x7B, cycles: 4 , mnemonic: 'LD A, E   ' , byteLength: 1, fn: implementationOf[0x7B] }),
+      new Instruction({ opcode: 0x7C, cycles: 4 , mnemonic: 'LD A, H   ' , byteLength: 1, fn: implementationOf[0x7C] }),
+      new Instruction({ opcode: 0x7D, cycles: 4 , mnemonic: 'LD A, L   ' , byteLength: 1, fn: implementationOf[0x7D] }),
+      new Instruction({ opcode: 0x7E, cycles: 8 , mnemonic: 'LD A, (HL)' , byteLength: 1, fn: implementationOf[0x7E] }),
+      new Instruction({ opcode: 0x7F, cycles: 4 , mnemonic: 'LD A, A   ' , byteLength: 1, fn: implementationOf[0x7F] }),
       new Instruction({ opcode: 0xE0, cycles: 12, mnemonic: 'LDH (a8), A', byteLength: 2, fn: implementationOf[0xE0] }),
       new Instruction({ opcode: 0xE2, cycles: 8 , mnemonic: 'LD (C), A'  , byteLength: 2, fn: implementationOf[0xE2] }),
       new Instruction({ opcode: 0xEA, cycles: 16, mnemonic: 'LD (a16), A', byteLength: 3, fn: implementationOf[0xEA] }),
@@ -1505,6 +1525,11 @@ export class Cpu {
       0x96: () => { register.A.sub( readMemory(this.#HL) ); },
       0xA6: () => { register.A.and( readMemory(this.#HL) ); },
       0xB6: () => { register.A.or( readMemory(this.#HL) ); },
+
+      0x87: () => { register.A.add(this.#A); },
+      0x97: () => { register.A.sub(this.#A); },
+      0xA7: () => { register.A.and(this.#A); },
+      0xB7: () => { register.A.or(this.#A); },
 
       0x88: () => { register.A.adc(this.#B); },
       0x98: () => { register.A.sbc(this.#B); },
