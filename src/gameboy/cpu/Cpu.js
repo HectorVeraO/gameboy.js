@@ -2192,4 +2192,5 @@ export class Cpu {
   //#endregion
 }
 
+/** @type {Cpu} */
 export const SharpLR35902 = Cpu;
