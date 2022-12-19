@@ -1,30 +1,56 @@
+import { System } from "./system/System";
 
 /**
  * Abstraction representing the exposed functionality to the end user
  */
 export class Gameboy {
+
+  constructor() {
+    this.#system = new System();
+  }
+
   /** Cartridge's name */
   game() {
-    // TODO: Implement
+    return this.#system.cartridge.title;
   }
 
   /** Load cartridge */
-  load() {
-    // TODO: Implement
+  load(bytes) {
+    this.#system.loadCartridge(bytes);
   }
 
   /** Remove cartridge */
   unload() {
-    // TODO: Implement
+    this.#system.unloadCartridge();
   }
 
   /** Turn on console */
   power() {
-    // TODO: Implement
+    this.#system.reset();
+    return this.run();
   }
 
   /** Play cartridge TODO: confirm */
-  run() {
-    // TODO: Implement
+  async *run() {
+    const targetFramerate = 59.7;
+    const frameDuration = 1 / targetFramerate;
+    let previousTimestamp = performance.now();
+    while (true) {
+      const currentTimestamp = performance.now();
+      const millisecondsElapsed = currentTimestamp - previousTimestamp;
+      // if (millisecondsElapsed < frameDuration) {
+      //   return;
+      // }
+
+      
+      previousTimestamp = currentTimestamp;
+      
+      const maybeFramebuffer = this.#system.clock();
+      if (maybeFramebuffer)
+        yield maybeFramebuffer;
+    }
   }
+
+  /** @type {System} */
+  #system;
 }
