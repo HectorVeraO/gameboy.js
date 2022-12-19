@@ -320,8 +320,8 @@ export class Ppu {
     // TODO: Draw sprites (front layer)
 
     // TODO: Update scanline
-    this.#LY++;
-    if (this.#LY++ === Ppu.#FRAME_PIXEL_HEIGHT) {
+    this.#LY.increment();
+    if (this.#LY === Ppu.#FRAME_PIXEL_HEIGHT) {
       // TODO: Emit frame
       
       // TODO: Emit vertical interrupt
