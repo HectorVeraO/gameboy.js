@@ -1,8 +1,12 @@
 import { ContainerFactory } from "@common/ContainerFactory";
 import { byte, KiB } from "@common/constants/InformationUnits";
-import { Cpu, SharpLR35902 } from "@gameboy/cpu/Cpu";
+import { Cpu } from "@gameboy/cpu/Cpu";
 import { Cartridge } from "@gameboy/cartridge/Cartridge";
 import { Ppu } from "@gameboy/ppu/Ppu";
+import { Joypad } from "@gameboy/io/Joypad";
+import { LinkController } from "@gameboy/io/LinkController";
+import { TimeController } from "@gameboy/io/TimeController";
+import { Apu } from "@gameboy/apu/Apu";
 
 /**
  * GameBoy SoC representation (plus the Work RAM and Video RAM for convenience)
@@ -11,6 +15,9 @@ import { Ppu } from "@gameboy/ppu/Ppu";
  */
 export class System {
   static bitsPerWord = 8;
+
+  /** @type {Cartridge} */
+  cartridge = { read: () => 0xFF, write: (address, byte) => {} }; // FIXME: Handle as "Empty Cartridge"
 
   /** Video RAM */
   vram = System.#createMemory(16 * KiB);
@@ -36,20 +43,23 @@ export class System {
   /** Interrupt Enable register (IE) */
   ier = System.#createMemory(0x0001 * byte);
   
-  /**
-   * 
-   * @param {() => Uint8Array} fetchCartrige 
-   */
-  constructor(fetchCartrige) {
-    this.#readMemory = this.#readMemory.bind(this);
-    this.#writeMemory = this.#writeMemory.bind(this);
-
+  constructor() {
     const memoryPins = { read: this.#readMemory, write: this.#writeMemory };
 
-    this.#cpu = new SharpLR35902(memoryPins);
+    this.#cpu = new Cpu(memoryPins);
     this.#ppu = new Ppu(memoryPins);
+    this.#joypad = new Joypad(memoryPins);
+    this.#linkController = new LinkController(memoryPins);
+    this.#timeController = new TimeController(memoryPins);
+    this.#apu = new Apu(memoryPins);
 
-    this.#fetchCartridge = fetchCartrige;
+    const toMemoryGuard = (device) => ({
+      name: device.constructor.name,
+      guardRead: device.guardRead.bind(device),
+      guardWrite: device.guardWrite.bind(device)
+    });
+
+    this.#memoryGuards = [ this.#cpu, this.#ppu, this.#joypad, this.#linkController, this.#timeController, this.#apu ].map(toMemoryGuard);
   }
 
   power() {
@@ -61,16 +71,21 @@ export class System {
     this.#ppu.reset();
   }
 
-  async clock() {
+  clock() {
     const tStates = this.#cpu.step();
-    this.#ppu.performDots(tStates);
+    const maybeFramebuffer = this.#ppu.performDots(tStates);
     const mStates = tStates / 4;
+    return maybeFramebuffer;
     // TODO: Wait time
   }
 
-  loadCartridge() {
-    const bytes = this.#fetchCartridge();
+  loadCartridge(bytes) {
+    if (!bytes) {
+      console.warn('Cartridge data missing');
+      return;
+    }
     this.cartridge = new Cartridge(bytes);
+    this.reset();
   }
 
   unloadCartridge() {
@@ -78,30 +93,35 @@ export class System {
     // TODO: Reset?
   }
 
-  // TODO: Link CPU and PPU guards
-  #readMemory(address) {
+  #readMemory = (address) => {
     const boundedAddress = address & 0xFFFF;
-
-    if (boundedAddress < 0x0100)
-      return this.#cpu.bootRom[address];
+    
+    // TODO: Unroll this loop and target specific regions to optimize IO reads
+    for (const device of this.#memoryGuards) {
+      const deviceByte = device.guardRead(boundedAddress);
+      if (deviceByte) {
+        console.log(`Read handled by ${device.name}`);
+        return deviceByte;
+      }
+    }
 
     if (boundedAddress < 0x4000)
-      return this.cartridge.read(address);
+      return this.cartridge.read(boundedAddress);
     
     if (boundedAddress < 0x8000)
-      return this.cartridge.read(address);
+      return this.cartridge.read(boundedAddress);
     
     if (boundedAddress < 0xA000)
-      return this.cartridge.read(address);
+      return this.cartridge.read(boundedAddress);
     
     if (boundedAddress < 0xC000)
-      return this.cartridge.read(address);
+      return this.cartridge.read(boundedAddress);
 
     if (boundedAddress < 0xD000)
-      return this.cartridge.read(address);
+      return this.cartridge.read(boundedAddress);
 
     if (boundedAddress < 0xE000)
-      return this.cartridge.read(address);
+      return this.cartridge.read(boundedAddress);
 
     if (boundedAddress < 0xFE00)
       return this.cartridge.read(boundedAddress - (0xE000 - 0xC000)); // Mirror from 0xC000 to 0xDDFF
@@ -122,9 +142,16 @@ export class System {
       return this.ier[0];
   }
 
-  // TODO: Link CPU and PPU guards
-  #writeMemory(address, byte) {
+  #writeMemory = (address, byte) => {
     const boundedAddress = address & 0xFFFF;
+
+    // TODO: Unroll this loop and target specific regions to optimize IO writes
+    for (const device of this.#memoryGuards) {
+      if (device.guardWrite(address, byte)) {
+        console.log(`Write handled by ${device.name}`);
+        return;
+      }
+    }
 
     if (boundedAddress < 0x4000)
       this.cartridge.write(address, byte);
@@ -169,12 +196,6 @@ export class System {
     return ContainerFactory.create({ capacity: capacity, bitsPerSlot: System.#bitsPerWord });
   }
 
-  /** @type {() => Uint8Array} */
-  #fetchCartridge;
-
-  /** @type {Cartridge} */
-  cartridge = new Cartridge(new Uint8Array(0)); // FIXME: Handle as "Empty Cartridge"
-
   /** @type {Cpu} */
   #cpu;
 
@@ -183,4 +204,16 @@ export class System {
 
   /** @type {Apu} */
   #apu;
+
+  /** @type {Joypad} */
+  #joypad;
+  
+  /** @type {LinkController} */
+  #linkController;
+
+  /** @type {TimeController} */
+  #timeController;
+
+  /** @type {{ name: string, guardRead: (address: uint16) => uint8 | null, guardWrite: (address: uint16, byte: uint8) => boolean }[]} */
+  #memoryGuards;
 }
