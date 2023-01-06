@@ -69,6 +69,26 @@ export class Cpu {
   }
 
   step() {
+    const anyInterruptEnabled = this.#IME && (this.#IE & 0x1F);
+    const anyInterruptPending = (this.#IF & 0x1F) > 0;
+    /** Precomputed lookup table for faster access (we avoid finding the first non zero bit in runtime) */
+    /** TODO: Or I could also just test the bits in order... x & 1, x & 2, x & 4, x & 8, ... */
+    const VECTOR_BY_INTERRUPT_FLAG_STATE = [
+      null, 0x40, 0x48, 0x40,
+      0x50, 0x40, 0x48, 0x40,
+      0x58, 0x40, 0x48, 0x40,
+      0x50, 0x40, 0x48, 0x40,
+      0x60, 0x40, 0x48, 0x40,
+      0x50, 0x40, 0x48, 0x40,
+      0x58, 0x40, 0x48, 0x40,
+      0x50, 0x40, 0x48, 0x40
+    ];
+    if (anyInterruptEnabled && anyInterruptPending) {
+      const vector = VECTOR_BY_INTERRUPT_FLAG_STATE[this.#IF];
+      if (vector)
+        this.#startInterruptServiceRoutine(vector);
+    }
+
     const opcode = this.opcode();
     const instruction = this.decode(opcode);
     assertType(instruction, Instruction, `No instruction defined for opcode ${hexStr(opcode)}`);
@@ -143,7 +163,6 @@ export class Cpu {
   #write;
 
   /**
-   * 
    * @param {number} opcode 
    * @returns {Instruction}
    */
@@ -157,12 +176,21 @@ export class Cpu {
     return instructionFrom[targetOpcode];
   }
 
+  /** @param {uint8} vector */
+  #startInterruptServiceRoutine(vector) {
+    // Once the interrupt vector has been resolved, the corresponding handler is invoked,
+    // this invokation behaves exactly like a regular "CALL" instruction
+    // TODO: leverage a CALL instruction implementation
+    this.#push(this.#PC);
+    this.#PC = vector;
+  }
+
   //#region State (not from spec)
 
   #cycleCount;
   #cyclesLeft;
 
-  #isHalted;  // TODO: Implement behavior
+  #isHalted;
   #isStopped; // TODO: Implement behavior
 
   //#endregion
@@ -364,6 +392,7 @@ export class Cpu {
 
   //#region Stack operations
 
+  /** @param {uint16} word */
   #push(word) {
     const highByte = (word & 0xFF00) >>> 8; // The GameBoy's CPU behaves as a little endian CPU when dealing
     this.#write(--this.#SP, highByte);       // with multi-byte data, thus we need to push bytes onto the stack
@@ -372,6 +401,7 @@ export class Cpu {
     this.#write(--this.#SP, lowByte);        // (Remember that a stack follows the LIFO principle)
   }
 
+  /** @returns {uint16} */
   #pop() {
     const lowByte = this.#read(this.#SP++);
     const highByte = this.#read(this.#SP++);

@@ -40,8 +40,11 @@ export class System {
   /** Forbidden memory (Nintendo says use of this area is prohibited) */
   fmem = System.#createMemory(0x0060 * byte); // TODO: Confirm, memory mapped from 0xFEA0 to 0xFEFF
 
-  /** Interrupt Enable register (IE) */
+  /** Interrupt Enable register (IE), mapped to 0xFFFF */
   ier = System.#createMemory(0x0001 * byte);
+
+  /** Interrupt flag (IF), allows to  request an interrupt, mapped to 0xFF0F */
+  ifr = System.#createMemory(0x0001 * byte);
   
   constructor() {
     const memoryPins = { read: this.#readMemory, write: this.#writeMemory };
@@ -131,6 +134,9 @@ export class System {
 
     if (boundedAddress < 0xFF00)
       return this.fmem[boundedAddress - 0xFEA0]; // Nintendo says use of this area is prohibited
+
+    if (boundedAddress === 0xFF0F)
+      return this.ifr[0];
 
     if (boundedAddress < 0xFF80)
       return this.ior[boundedAddress - 0xFF00];
