@@ -562,6 +562,7 @@ export class Cpu {
       new Instruction({ opcode: 0xEA, cycles: 16, mnemonic: 'LD (a16), A', byteLength: 3, fn: implementationOf[0xEA] }),
       new Instruction({ opcode: 0xF0, cycles: 12, mnemonic: 'LDH A, (a8)', byteLength: 2, fn: implementationOf[0xF0] }),
       new Instruction({ opcode: 0xF2, cycles: 8 , mnemonic: 'LD A, (C)'  , byteLength: 2, fn: implementationOf[0xF2] }),
+      new Instruction({ opcode: 0xFA, cycles: 16, mnemonic: 'LD A, (a16)', byteLength: 3, fn: implementationOf[0xFA] }),
     ];
 
     return instructions;
