@@ -101,7 +101,7 @@ export class Ppu {
           this.#modeDotCount = 0;
           this.#LY.increment();
           
-          const isLastVisibleLine = this.#LY === Ppu.#FRAME_PIXEL_HEIGHT - 1;
+          const isLastVisibleLine = this.#LY.equals(Ppu.#FRAME_PIXEL_HEIGHT - 1);
           if (isLastVisibleLine) {
             this.#STAT.lcdMode = VBlank;
             return this.#frameBuffer; // TODO: Improve frame emission
@@ -321,7 +321,7 @@ export class Ppu {
 
     // TODO: Update scanline
     this.#LY.increment();
-    if (this.#LY === Ppu.#FRAME_PIXEL_HEIGHT) {
+    if (this.#LY.equals(Ppu.#FRAME_PIXEL_HEIGHT)) {
       // TODO: Emit frame
       
       // TODO: Emit vertical interrupt
