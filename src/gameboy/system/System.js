@@ -7,6 +7,7 @@ import { Joypad } from "@gameboy/io/Joypad";
 import { LinkController } from "@gameboy/io/LinkController";
 import { TimeController } from "@gameboy/io/TimeController";
 import { Apu } from "@gameboy/apu/Apu";
+import { hexStr } from "@common/Number";
 
 /**
  * GameBoy SoC representation (plus the Work RAM and Video RAM for convenience)
@@ -103,7 +104,7 @@ export class System {
     for (const device of this.#memoryGuards) {
       const deviceByte = device.guardRead(boundedAddress);
       if (deviceByte) {
-        console.log(`Read handled by ${device.name}`);
+        console.log(`${device.name} handled read on ${hexStr(boundedAddress, '$', 2)} got ${hexStr(byte, '$', 2)}`);
         return deviceByte;
       }
     }
@@ -154,7 +155,7 @@ export class System {
     // TODO: Unroll this loop and target specific regions to optimize IO writes
     for (const device of this.#memoryGuards) {
       if (device.guardWrite(address, byte)) {
-        console.log(`Write handled by ${device.name}`);
+        console.log(`${device.name} handled write of ${hexStr(byte, '$', 2)} on ${hexStr(boundedAddress, '$', 2)}`);
         return;
       }
     }
