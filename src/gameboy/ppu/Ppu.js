@@ -1,4 +1,3 @@
-import { Uint8 } from "@common/Uint8";
 import { RegisterBGP } from "./registers/RegisterBGP";
 import { RegisterLCDC } from "./registers/RegisterLCDC";
 import { RegisterLY } from "./registers/RegisterLY";
@@ -272,65 +271,60 @@ export class Ppu {
       return useAlternativeBackground || useAlternativeWindow;
     };
 
-    const tilemapAddress = useAlternativeTilemap() ? 0x9C00 : 0x9800;
-    const isWindowTile = this.#LCDC.winEn;
+    // TODO: When is the PPU's access to VRAM blocked?
+    const isVramBlocked = () => {
+      return false;
+    };
 
-    if (isWindowEnabled) {
-      return;
-    }
+    while (pixelScanlinePosition < Ppu.#FRAME_PIXEL_WIDTH) {
+      // TODO: Complete the 160 pixels in the scanline, loop is missing
+      const tilemapAddress = useAlternativeTilemap() ? 0x9C00 : 0x9800;
+      const isWindowTile = this.#LCDC.winEn;
 
-    if (isBackgroundEnabled) {
-      const x = ((this.#SCX >>> 3) + pixelScanlinePosition) & 0x1F;
-      const y = (this.#SCY + this.#LY) & 0xFF;
-
-      // TODO: When is the PPU's access to VRAM blocked?
-      const isVramBlocked = () => {
-        return false;
-      };
-
-      const tileIdAddress = tilemapAddress + y + x;
-      const tileId = isVramBlocked() ? 0xFF : this.#read(tileIdAddress);
-
-      const resolveTileAddress = (tileId) => {
-        const resolvedTileId = this.#LCDC.tileSel ? int8(tileId) : tileId;
-        const tileDataAreaAddress = this.#LCDC.tileSel ? 0x9000 : 0x8000;
-        return tileDataAreaAddress + (resolvedTileId << 4); // Each tile is 16 bytes long so we multiply its ID by 16
-      };
-
-      const tileDataAddress = resolveTileAddress(tileId);
-      const tilePositionY = (this.#LY + this.#SCY) % Ppu.#TILE_PIXEL_HEIGHT;
-      const tilePositionX = this.#SCX % Ppu.#TILE_PIXEL_WIDTH;
-
-      const tileLineDataLow = this.#read(tileDataAddress + (tilePositionY << 1) + 0);
-      const tileLineDataHigh = this.#read(tileDataAddress + (tilePositionY << 1) + 1);
-
-      for (let position = 7 - tilePositionX; position >= 0; position--) {
-        const colorIndexLowBit = (tileLineDataLow >>> position) & 1;
-        const colorIndexHighBit = (tileLineDataHigh >>> position) & 1;
-        const colorIndex = (colorIndexHighBit << 1) | colorIndexLowBit;
-        const colorValue = this.#BGP.colorOf(colorIndex);
-        const pixelRgb888 = MONOCHROME_COLOR_BY_VALUE[colorValue];
-        const pixelFrameBufferPosition = this.#LY * Ppu.#FRAME_PIXEL_WIDTH + pixelScanlinePosition;
-        this.#frameBuffer[pixelFrameBufferPosition] = pixelRgb888.rgb;
+      if (isWindowEnabled) {
+        return;
       }
 
-      return;
+      if (isBackgroundEnabled) {
+        const x = ((this.#SCX >>> 3) + pixelScanlinePosition) & 0x1F;
+        const y = (this.#SCY + this.#LY) & 0xFF;
+
+        const tileIdAddress = tilemapAddress + y + x;
+        const tileId = isVramBlocked() ? 0xFF : this.#read(tileIdAddress);
+
+        const resolveTileAddress = (tileId) => {
+          const resolvedTileId = this.#LCDC.tileSel ? int8(tileId) : tileId;
+          const tileDataAreaAddress = this.#LCDC.tileSel ? 0x9000 : 0x8000;
+          return tileDataAreaAddress + (resolvedTileId << 4); // Each tile is 16 bytes long so we multiply its ID by 16
+        };
+
+        const tileDataAddress = resolveTileAddress(tileId);
+        const tilePositionY = (this.#LY + this.#SCY) % Ppu.#TILE_PIXEL_HEIGHT;
+        const tilePositionX = this.#SCX % Ppu.#TILE_PIXEL_WIDTH;
+
+        const tileLineDataLow = this.#read(tileDataAddress + (tilePositionY << 1) + 0);
+        const tileLineDataHigh = this.#read(tileDataAddress + (tilePositionY << 1) + 1);
+
+        // TODO: I could skip this loop but that would require fetching the tile data for each of its
+        // row pixels being renderd (which is slow), or I could cache the tile data and refresh it once the tile has been redered
+        const isFirstTile = pixelScanlinePosition === 0;
+        let tilePixelOffset = 7 - (isFirstTile ? tilePositionX : 0);
+        while (tilePixelOffset >= 0) {
+        // for (let position = 7 - tilePositionX; position >= 0; position--) {
+          const colorIndexLowBit = (tileLineDataLow >>> tilePixelOffset) & 1;
+          const colorIndexHighBit = (tileLineDataHigh >>> tilePixelOffset) & 1;
+          const colorIndex = (colorIndexHighBit << 1) | colorIndexLowBit;
+          const colorValue = this.#BGP.colorOf(colorIndex);
+          const pixelRgb888 = MONOCHROME_COLOR_BY_VALUE[colorValue];
+          const pixelFrameBufferPosition = this.#LY * Ppu.#FRAME_PIXEL_WIDTH + pixelScanlinePosition;
+          this.#frameBuffer[pixelFrameBufferPosition] = pixelRgb888.rgb;
+          tilePixelOffset--;
+          pixelScanlinePosition++;
+        }
+      }
+
+      // TODO: Draw sprites (front layer)
     }
-
-    // TODO: Draw sprites (front layer)
-
-    // TODO: Update scanline
-    this.#LY.increment();
-    if (this.#LY.equals(Ppu.#FRAME_PIXEL_HEIGHT)) {
-      // TODO: Emit frame
-      
-      // TODO: Emit vertical interrupt
-
-      // TODO: Prepare state for new frame
-      this.#LY = 0;
-    }
-
-
     // TOOD: Once complete improve code (like factor out stuff)
   }
 
