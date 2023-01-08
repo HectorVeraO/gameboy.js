@@ -65,8 +65,8 @@ export class Uint8 {
     return this.#value;
   }
 
-  toString() {
-    return `0x${Number(this.#value).toString(16)}`;
+  toString(prefix = '0x') {
+    return `${prefix}${Number(this.#value).toString(16).padStart(2, '0')}`;
   }
 
   #value;
