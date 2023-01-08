@@ -9,10 +9,10 @@ import { RegisterWX } from "./registers/RegisterWX";
 import { RegisterWY } from "./registers/RegisterWY";
 
 const MONOCHROME_COLOR_BY_VALUE = {
-  0: { value: 0, pixel: 'Off'   , rgb: 0xFFFFFF },
-  1: { value: 1, pixel: '33% on', rgb: 0xC0C0C0 },
-  2: { value: 2, pixel: '33% on', rgb: 0x606060 },
-  3: { value: 3, pixel: 'On'    , rgb: 0x000000 },
+  0: { value: 0, pixel: 'Off'   , rgba: 0xFFFFFFFF },
+  1: { value: 1, pixel: '33% on', rgba: 0xC0C0C0FF },
+  2: { value: 2, pixel: '33% on', rgba: 0x606060FF },
+  3: { value: 3, pixel: 'On'    , rgba: 0x000000FF },
 };
 
 const int8 = (byte) => byte << 24 >> 24;
@@ -315,9 +315,9 @@ export class Ppu {
           const colorIndexHighBit = (tileLineDataHigh >>> tilePixelOffset) & 1;
           const colorIndex = (colorIndexHighBit << 1) | colorIndexLowBit;
           const colorValue = this.#BGP.colorOf(colorIndex);
-          const pixelRgb888 = MONOCHROME_COLOR_BY_VALUE[colorValue];
+          const pixelRgba8888 = MONOCHROME_COLOR_BY_VALUE[colorValue];
           const pixelFrameBufferPosition = this.#LY * Ppu.#FRAME_PIXEL_WIDTH + pixelScanlinePosition;
-          this.#frameBuffer[pixelFrameBufferPosition] = pixelRgb888.rgb;
+          this.#frameBuffer[pixelFrameBufferPosition] = pixelRgba8888.rgba;
           tilePixelOffset--;
           pixelScanlinePosition++;
         }
