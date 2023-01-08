@@ -254,7 +254,7 @@ export class Ppu {
     }
 
     // TODO: Count dots (cycles? see Pixel FIFO doc at gbdev.io)
-    const isBackgroundEnabled = this.#LCDC.bgwEnPr && this.#LCDC.winEn;
+    const isBackgroundEnabled = this.#LCDC.bgwEnPr;
     const isWindowEnabled = this.#LCDC.bgwEnPr && this.#LCDC.winEn;
 
     let pixelScanlinePosition = 0; // mod 160
@@ -311,7 +311,7 @@ export class Ppu {
         const colorValue = this.#BGP.colorOf(colorIndex);
         const pixelRgb888 = MONOCHROME_COLOR_BY_VALUE[colorValue];
         const pixelFrameBufferPosition = this.#LY * Ppu.#FRAME_PIXEL_WIDTH + pixelScanlinePosition;
-        this.#frameBuffer[pixelFrameBufferPosition] = pixelRgb888;
+        this.#frameBuffer[pixelFrameBufferPosition] = pixelRgb888.rgb;
       }
 
       return;
