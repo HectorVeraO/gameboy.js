@@ -31,21 +31,21 @@ export class Ppu {
         return null;
       // TODO: Return spec compliant value if address is managed by PPU
       if (address === RegisterLCDC.ADDRESS)
-        return this.#LCDC;
+        return this.#LCDC.valueOf();
       if (address === RegisterSTAT.ADDRESS)
-        return this.#STAT;
+        return this.#STAT.valueOf();
       if (address === RegisterSCY.ADDRESS)
-        return this.#SCY;
+        return this.#SCY.valueOf();
       if (address === RegisterSCX.ADDRESS)
-        return this.#SCX;
+        return this.#SCX.valueOf();
       if (address === RegisterLY.ADDRESS)
-        return this.#LY;
+        return this.#LY.valueOf();
       if (address === RegisterLYC.ADDRESS)
-        return this.#LYC;
+        return this.#LYC.valueOf();
       if (address === RegisterWY.ADDRESS)
-        return this.#WY;
+        return this.#WY.valueOf();
       if (address === RegisterWX.ADDRESS)
-        return this.#WX;
+        return this.#WX.valueOf();
     }
   
     guardWrite(address, byte) {
