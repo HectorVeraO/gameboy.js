@@ -26,15 +26,15 @@ export class Mbc1 {
 
     // ROM banking register can address at most 32 ROM banks
     // Some games extend this register by wiring the RAM banking register
-    const romBankCountBitWidth = getMinimumBitWidth(this.#romBankCount - 1);
+    const romBankCountBitWidth = this.#romBankCount > 0 ? getMinimumBitWidth(this.#romBankCount - 1) : 0;
     this.#romBankSelectionMask = MASK_BY_BIT_WIDTH[romBankCountBitWidth];
     this.#extendedRomMode = this.#romBankCount > 32;
 
     // TODO: Some gamepaks (e.g. Blarg's CPU instruction tests do not use RAM, handle this case)
-    this.#ramBankCount = this.#extendedRomMode ? 1 : RAM_SIZES[header.ramSize];
+    this.#ramBankCount = this.#extendedRomMode ? 1 : RAM_SIZES[header.ramSize].bankCount;
     this.#ram = new Uint8Array(RAM_BANK_CAPACITY / byte * this.#ramBankCount);
 
-    const ramBankCountBitWidth = getMinimumBitWidth(this.#ramBankCount - 1);
+    const ramBankCountBitWidth = this.#ramBankCount > 0 ? getMinimumBitWidth(this.#ramBankCount - 1) : 0;
     this.#ramBankSelectionMask = MASK_BY_BIT_WIDTH[ramBankCountBitWidth];
   }
 
@@ -105,6 +105,7 @@ export class Mbc1 {
     if (address >= 0xA000 && address <= 0xBFFF && this.#registerRamEnable) {
       const mappedAddress = (this.#registerRamBankNumber << 13) | (address & 0x0FFF);
       this.#ram[mappedAddress] = value;
+      return;
     }
   }
 
