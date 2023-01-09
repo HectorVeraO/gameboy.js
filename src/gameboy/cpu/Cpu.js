@@ -95,7 +95,6 @@ export class Cpu {
 
     const extraCycles = instruction.execute();
     const cycleCount = instruction.cycles + extraCycles;
-
     return cycleCount;
   }
 
