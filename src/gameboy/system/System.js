@@ -24,10 +24,7 @@ export class System {
   vram = System.#createMemory(16 * KiB);
 
   /** Work RAM */
-  wram = System.#createMemory(32 * KiB);
-
-  /** Echo RAM */
-  eram = System.#createMemory(0x1E00 * byte); // TODO: Confirm, memory mapped from 0xE000 to 0xFDFF
+  wram = System.#createMemory(8 * KiB);
 
   /** High RAM */
   hram = System.#createMemory(0x007F * byte); // TODO: Confirm, memory mapped from 0xFF80 to 0xFFFE
@@ -122,10 +119,10 @@ export class System {
       return this.cartridge.read(boundedAddress);
 
     if (boundedAddress < 0xD000)
-      return this.cartridge.read(boundedAddress);
+      return this.wram[(boundedAddress - 0xC000) % 0x1000];
 
     if (boundedAddress < 0xE000)
-      return this.cartridge.read(boundedAddress);
+      return this.wram[(boundedAddress - 0xD000) % 0x1000]; // REMINDER: In CGB mode this are is mapped to the cartridge
 
     if (boundedAddress < 0xFE00)
       return this.cartridge.read(boundedAddress - (0xE000 - 0xC000)); // Mirror from 0xC000 to 0xDDFF
@@ -173,10 +170,10 @@ export class System {
       this.cartridge.write(address, byte);
 
     else if (boundedAddress < 0xD000)
-      this.cartridge.write(address, byte);
+      this.wram[(boundedAddress - 0xC000) % 0x1000] = byte;
 
     else if (boundedAddress < 0xE000)
-      this.cartridge.write(address, byte);
+      this.wram[(boundedAddress - 0xD000) % 0x1000] = byte;
 
     else if (boundedAddress < 0xFE00)
       this.cartridge.write(boundedAddress - (0xE000 - 0xC000), byte); // Mirror from 0xC000 to 0xDDF = byteF
