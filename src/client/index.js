@@ -1,4 +1,5 @@
 import { Gameboy } from "@gameboy/gameboy";
+import { saveFile } from "./utils/saveFile";
 
 const screenCanvas = document.querySelector('#screen');
 if (screenCanvas === null)
@@ -49,3 +50,16 @@ cartridgeInput.addEventListener('change', async () => {
 
   console.debug('Cartridge replaced')
 });
+
+const downloadLogs = document.querySelector('#downloadLogs');
+const onDownloadLogs = () => {
+  saveFile({
+    file: {
+      content: gameboy.getTrace(),
+      extension: 'log',
+      mimeType: 'text/plain',
+      prefix: 'gb-trace',
+    },
+  });
+};
+downloadLogs.addEventListener('click', onDownloadLogs);
