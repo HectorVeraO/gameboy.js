@@ -1,3 +1,4 @@
+import { Logger } from "@common/Logger";
 import { System } from "./system/System";
 
 /**
@@ -6,7 +7,9 @@ import { System } from "./system/System";
 export class Gameboy {
 
   constructor() {
-    this.#system = new System();
+    // TODO: Improve dependency injection
+    this.#logger = new Logger()
+    this.#system = new System(this.#logger);
   }
 
   /** Cartridge's name */
@@ -51,6 +54,14 @@ export class Gameboy {
     }
   }
 
+  /** TODO: Improve this shit */
+  getTrace() {
+    return this.#logger.flush();
+  }
+
   /** @type {System} */
   #system;
+
+  /** @type {Logger} */
+  #logger;
 }

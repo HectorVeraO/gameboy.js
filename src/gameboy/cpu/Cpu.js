@@ -1,4 +1,6 @@
 import { assertType } from "@common/Control";
+// eslint-disable-next-line no-unused-vars
+import { Logger } from "@common/Logger";
 import { hexStr } from "@common/Number";
 import { Uint8 } from "@common/Uint8";
 import { Instruction } from "./Instruction";
@@ -30,9 +32,10 @@ export class Cpu {
   ]);
 
   /** @param {{ read: (address: uint16) => uint8, write: (address: uint16, byte: uint8) => void }} memoryPins */
-  constructor({ read, write }) {
+  constructor({ read, write, logger }) {
     this.#read = read;
     this.#write = write;
+    this.#logger = logger;
 
     const mapByOpcode = (instructions) => instructions.reduce(
       (dict, instruction) => {
@@ -92,6 +95,16 @@ export class Cpu {
     const opcode = this.opcode();
     const instruction = this.decode(opcode);
     assertType(instruction, Instruction, `No instruction defined for opcode ${hexStr(opcode)}`);
+
+    // TODO: Make this configurable
+    const debug = true;
+    if (debug) {
+      const hex4 = (u) => hexStr(u, '', 4);
+      const hex2 = (u) => hexStr(u, '', 2);
+      const pc = this.#PC - (opcode === 0xCB ? 2 : 1);
+      this.#logger.log(`${hex4(pc)} ${hex2(opcode)} ${instruction.mnemonic}`);
+    }
+      
 
     const extraCycles = instruction.execute();
     const cycleCount = instruction.cycles + extraCycles;
@@ -184,6 +197,9 @@ export class Cpu {
     this.#push(this.#PC);
     this.#PC = vector;
   }
+
+  /** @type {Logger} */
+  #logger;
 
   //#region State (not from spec)
 

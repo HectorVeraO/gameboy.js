@@ -8,6 +8,8 @@ import { LinkController } from "@gameboy/io/LinkController";
 import { TimeController } from "@gameboy/io/TimeController";
 import { Apu } from "@gameboy/apu/Apu";
 import { hexStr } from "@common/Number";
+// eslint-disable-next-line no-unused-vars
+import { Logger } from "@common/Logger";
 
 /**
  * GameBoy SoC representation (plus the Work RAM and Video RAM for convenience)
@@ -44,10 +46,9 @@ export class System {
   /** Interrupt flag (IF), allows to  request an interrupt, mapped to 0xFF0F */
   ifr = System.#createMemory(0x0001 * byte);
   
-  constructor() {
+  constructor(logger) {
     const memoryPins = { read: this.#readMemory, write: this.#writeMemory };
-
-    this.#cpu = new Cpu(memoryPins);
+    this.#cpu = new Cpu({ ...memoryPins, logger });
     this.#ppu = new Ppu(memoryPins);
     this.#joypad = new Joypad(memoryPins);
     this.#linkController = new LinkController(memoryPins);
