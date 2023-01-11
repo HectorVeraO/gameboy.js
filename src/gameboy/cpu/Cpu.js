@@ -1398,21 +1398,21 @@ export class Cpu {
 
     const operand = () => this.operand();
     
-    const incrementA = () => { const previous = this.#A++; this.#F.Z = this.#A.equals(0); this.#F.N = 0; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF)); };
-    const incrementB = () => { const previous = this.#B++; this.#F.Z = this.#B.equals(0); this.#F.N = 0; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF)); };
-    const incrementC = () => { const previous = this.#C++; this.#F.Z = this.#C.equals(0); this.#F.N = 0; this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF)); };
-    const incrementD = () => { const previous = this.#D++; this.#F.Z = this.#D.equals(0); this.#F.N = 0; this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF)); };
-    const incrementE = () => { const previous = this.#E++; this.#F.Z = this.#E.equals(0); this.#F.N = 0; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF)); };
-    const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H.equals(0); this.#F.N = 0; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF)); };
-    const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L.equals(0); this.#F.N = 0; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF)); };
+    const incrementA = () => { const previous = this.#A++; this.#F.Z = this.#A.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#A & 0xF)); };
+    const incrementB = () => { const previous = this.#B++; this.#F.Z = this.#B.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#B & 0xF)); };
+    const incrementC = () => { const previous = this.#C++; this.#F.Z = this.#C.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#C & 0xF)); };
+    const incrementD = () => { const previous = this.#D++; this.#F.Z = this.#D.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#D & 0xF)); };
+    const incrementE = () => { const previous = this.#E++; this.#F.Z = this.#E.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#E & 0xF)); };
+    const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#H & 0xF)); };
+    const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L.equals(0); this.#F.N = 0; this.#F.H = ((previous & 0xF) > (this.#L & 0xF)); };
 
-    const decrementA = () => { const previous = this.#A--; this.#F.Z = this.#A.equals(0); this.#F.N = 1; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF));};
-    const decrementB = () => { const previous = this.#B--; this.#F.Z = this.#B.equals(0); this.#F.N = 1; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF));};
-    const decrementC = () => { const previous = this.#C--; this.#F.Z = this.#C.equals(0); this.#F.N = 1; this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF));};
-    const decrementD = () => { const previous = this.#D--; this.#F.Z = this.#D.equals(0); this.#F.N = 1; this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF));};
-    const decrementE = () => { const previous = this.#E--; this.#F.Z = this.#E.equals(0); this.#F.N = 1; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF));};
-    const decrementH = () => { const previous = this.#H--; this.#F.Z = this.#H.equals(0); this.#F.N = 1; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF));};
-    const decrementL = () => { const previous = this.#L--; this.#F.Z = this.#L.equals(0); this.#F.N = 1; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF));};
+    const decrementA = () => { const previous = this.#A--; this.#F.Z = this.#A.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#A & 0xF));};
+    const decrementB = () => { const previous = this.#B--; this.#F.Z = this.#B.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#B & 0xF));};
+    const decrementC = () => { const previous = this.#C--; this.#F.Z = this.#C.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#C & 0xF));};
+    const decrementD = () => { const previous = this.#D--; this.#F.Z = this.#D.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#D & 0xF));};
+    const decrementE = () => { const previous = this.#E--; this.#F.Z = this.#E.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#E & 0xF));};
+    const decrementH = () => { const previous = this.#H--; this.#F.Z = this.#H.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#H & 0xF));};
+    const decrementL = () => { const previous = this.#L--; this.#F.Z = this.#L.equals(0); this.#F.N = 1; this.#F.H = ((previous & 0xF) > (this.#L & 0xF));};
 
     const nibble = (value, position) => (value >>> (4 * position)) & 0xF;
     const applyDecimalCorrectionForA = () => {
