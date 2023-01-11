@@ -5,6 +5,7 @@
     "strict": true,
     "baseUrl": "./",
     "paths": {
+      "@root/*": ["./*"],
       "@client/*": ["./src/client/*"],
       "@gameboy/*": ["./src/gameboy/*"],
       "@common/*": ["./src/common/*"]

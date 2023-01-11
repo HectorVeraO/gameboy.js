@@ -12,6 +12,7 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.mjs'],
     alias: {
+      '@root': path.resolve(__dirname),
       '@client': path.resolve(__dirname, 'src', 'client'),
       '@gameboy': path.resolve(__dirname, 'src', 'gameboy'),
       '@common': path.resolve(__dirname, 'src', 'common'),
