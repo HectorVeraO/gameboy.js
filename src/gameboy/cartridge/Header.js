@@ -52,10 +52,11 @@
 
   constructor(gamepakBytes) {
     const slice = (collection, start, length) => collection.slice(start, (start + length));
+    const stringFromCharCodes = (codes) => codes.reduce((str, code) => `${str}${String.fromCharCode(code)}`, '');
     this.bytes = slice(gamepakBytes, Header.#position, Header.#length);
     this.entryPoint = slice(gamepakBytes, 0x100, 0x4);
     this.nintendoLogo = slice(gamepakBytes, 0x104, 0x30);
-    this.title = slice(gamepakBytes, 0x134, 0x10);
+    this.title = stringFromCharCodes(slice(gamepakBytes, 0x134, 0x10));
     this.manufacturerCode = slice(gamepakBytes, 0x13F, 0x4);
     this.cgbFlag = gamepakBytes.at(0x143);
     this.newLicenseeCode = slice(gamepakBytes, 0x144, 0x2);
