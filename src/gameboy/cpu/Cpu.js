@@ -1406,13 +1406,13 @@ export class Cpu {
     const incrementH = () => { const previous = this.#H++; this.#F.Z = this.#H.equals(0); this.#F.N = 0; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF)); };
     const incrementL = () => { const previous = this.#L++; this.#F.Z = this.#L.equals(0); this.#F.N = 0; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF)); };
 
-    const decrementA = () => { const previous = this.#A++; this.#F.Z = this.#A.equals(0); this.#F.N = 1; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF));};
-    const decrementB = () => { const previous = this.#B++; this.#F.Z = this.#B.equals(0); this.#F.N = 1; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF));};
-    const decrementC = () => { const previous = this.#C++; this.#F.Z = this.#C.equals(0); this.#F.N = 1; this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF));};
-    const decrementD = () => { const previous = this.#D++; this.#F.Z = this.#D.equals(0); this.#F.N = 1; this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF));};
-    const decrementE = () => { const previous = this.#E++; this.#F.Z = this.#E.equals(0); this.#F.N = 1; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF));};
-    const decrementH = () => { const previous = this.#H++; this.#F.Z = this.#H.equals(0); this.#F.N = 1; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF));};
-    const decrementL = () => { const previous = this.#L++; this.#F.Z = this.#L.equals(0); this.#F.N = 1; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF));};
+    const decrementA = () => { const previous = this.#A--; this.#F.Z = this.#A.equals(0); this.#F.N = 1; this.#F.H = ((this.#A & 0xFF) > (previous & 0xFF));};
+    const decrementB = () => { const previous = this.#B--; this.#F.Z = this.#B.equals(0); this.#F.N = 1; this.#F.H = ((this.#B & 0xFF) > (previous & 0xFF));};
+    const decrementC = () => { const previous = this.#C--; this.#F.Z = this.#C.equals(0); this.#F.N = 1; this.#F.H = ((this.#C & 0xFF) > (previous & 0xFF));};
+    const decrementD = () => { const previous = this.#D--; this.#F.Z = this.#D.equals(0); this.#F.N = 1; this.#F.H = ((this.#D & 0xFF) > (previous & 0xFF));};
+    const decrementE = () => { const previous = this.#E--; this.#F.Z = this.#E.equals(0); this.#F.N = 1; this.#F.H = ((this.#E & 0xFF) > (previous & 0xFF));};
+    const decrementH = () => { const previous = this.#H--; this.#F.Z = this.#H.equals(0); this.#F.N = 1; this.#F.H = ((this.#H & 0xFF) > (previous & 0xFF));};
+    const decrementL = () => { const previous = this.#L--; this.#F.Z = this.#L.equals(0); this.#F.N = 1; this.#F.H = ((this.#L & 0xFF) > (previous & 0xFF));};
 
     const nibble = (value, position) => (value >>> (4 * position)) & 0xF;
     const applyDecimalCorrectionForA = () => {
