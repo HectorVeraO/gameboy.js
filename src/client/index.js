@@ -58,7 +58,7 @@ const onDownloadLogs = () => {
       content: gameboy.getTrace(),
       extension: 'log',
       mimeType: 'text/plain',
-      prefix: 'gb-trace',
+      prefix: `gb_trace-${gameboy.game()}`,
     },
   });
 };
