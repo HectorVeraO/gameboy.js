@@ -42,6 +42,8 @@ export class Ppu {
         return this.#LY.valueOf();
       if (address === RegisterLYC.ADDRESS)
         return this.#LYC.valueOf();
+      if (address === RegisterBGP.ADDRESS)
+        return this.#BGP.valueOf();
       if (address === RegisterWY.ADDRESS)
         return this.#WY.valueOf();
       if (address === RegisterWX.ADDRESS)
@@ -62,6 +64,8 @@ export class Ppu {
         this.#LY = byte;
       else if (address === RegisterLYC.ADDRESS)
         this.#LYC = byte;
+      else if (address === RegisterBGP.ADDRESS)
+        this.#BGP = byte;
       else if (address === RegisterWY.ADDRESS)
         this.#WY = byte;
       else if (address === RegisterWX.ADDRESS)
