@@ -45,6 +45,10 @@ export class System {
 
   /** Interrupt flag (IF), allows to  request an interrupt, mapped to 0xFF0F */
   ifr = System.#createMemory(0x0001 * byte);
+
+  get tStatesPerformed() {
+    return this.#tStatesCount;
+  }
   
   constructor(logger) {
     const memoryPins = { read: this.#readMemory, write: this.#writeMemory };
@@ -77,6 +81,7 @@ export class System {
     const tStates = this.#cpu.step();
     const maybeFramebuffer = this.#ppu.performDots(tStates);
     const mStates = tStates / 4;
+    this.#tStatesCount += tStates;
     return maybeFramebuffer;
     // TODO: Wait time
   }
@@ -101,10 +106,8 @@ export class System {
     // TODO: Unroll this loop and target specific regions to optimize IO reads
     for (const device of this.#memoryGuards) {
       const deviceByte = device.guardRead(boundedAddress);
-      if (deviceByte) {
-        console.log(`${device.name} handled read on ${hexStr(boundedAddress, '$', 2)} got ${hexStr(byte, '$', 2)}`);
+      if (deviceByte)
         return deviceByte;
-      }
     }
 
     if (boundedAddress < 0x4000)
@@ -152,10 +155,8 @@ export class System {
 
     // TODO: Unroll this loop and target specific regions to optimize IO writes
     for (const device of this.#memoryGuards) {
-      if (device.guardWrite(address, byte)) {
-        console.log(`${device.name} handled write of ${hexStr(byte, '$', 2)} on ${hexStr(boundedAddress, '$', 2)}`);
+      if (device.guardWrite(address, byte))
         return;
-      }
     }
 
     if (boundedAddress < 0x4000)
@@ -221,4 +222,6 @@ export class System {
 
   /** @type {{ name: string, guardRead: (address: uint16) => uint8 | null, guardWrite: (address: uint16, byte: uint8) => boolean }[]} */
   #memoryGuards;
+
+  #tStatesCount = 0;
 }

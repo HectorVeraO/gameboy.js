@@ -1,7 +1,7 @@
 import { assertType } from "@common/Control";
 // eslint-disable-next-line no-unused-vars
 import { Logger } from "@common/Logger";
-import { hexStr } from "@common/Number";
+import { decStr, hexStr } from "@common/Number";
 import { Uint8 } from "@common/Uint8";
 import { Instruction } from "./Instruction";
 import { RegisterF } from "./registers/RegisterF";
@@ -102,12 +102,13 @@ export class Cpu {
       const hex4 = (u) => hexStr(u, '', 4);
       const hex2 = (u) => hexStr(u, '', 2);
       const pc = this.#PC - (opcode === 0xCB ? 2 : 1);
-      this.#logger.log(`${hex4(pc)} ${hex2(opcode)} ${instruction.mnemonic}`);
+      this.#logger.log(`${decStr(this.#cycleCount)} ${hex4(pc)} ${hex2(opcode)} ${instruction.mnemonic}`);
     }
       
 
     const extraCycles = instruction.execute();
     const cycleCount = instruction.cycles + extraCycles;
+    this.#cycleCount += cycleCount;
     return cycleCount;
   }
 
