@@ -3,6 +3,7 @@ import { assertType } from "@common/Control";
 import { Logger } from "@common/Logger";
 import { decStr, hexStr } from "@common/Number";
 import { Uint8 } from "@common/Uint8";
+import { Config } from "@root/gameboy.config";
 import { Instruction } from "./Instruction";
 import { RegisterF } from "./registers/RegisterF";
 
@@ -97,12 +98,25 @@ export class Cpu {
     assertType(instruction, Instruction, `No instruction defined for opcode ${hexStr(opcode)}`);
 
     // TODO: Make this configurable
-    const debug = true;
-    if (debug) {
+  
+    if (Config.DEBUG) {
       const hex4 = (u) => hexStr(u, '', 4);
       const hex2 = (u) => hexStr(u, '', 2);
       const pc = this.#PC - (opcode === 0xCB ? 2 : 1);
-      this.#logger.log(`${decStr(this.#cycleCount)} ${hex4(pc)} ${hex2(opcode)} ${instruction.mnemonic}`);
+      let msg = `${decStr(this.#cycleCount)}`;
+      msg += `   ${hex4(pc)}`;
+      msg += `   ${hex2(opcode)}`;
+      msg += ` ${instruction.mnemonic.padEnd(20, ' ')}`;
+      msg += `   AF=${hex4(this.#AF)}`;
+      msg += ` BC=${hex4(this.#BC)}`;
+      msg += ` DE=${hex4(this.#DE)}`;
+      msg += ` HL=${hex4(this.#HL)}`;
+      msg += ` SP=${hex4(this.#SP)}`;
+      msg += `   Z=${decStr(this.#F.Z, '', 1)}`;
+      msg += ` N=${decStr(this.#F.N, '', 1)}`;
+      msg += ` H=${decStr(this.#F.H, '', 1)}`;
+      msg += ` C=${decStr(this.#F.C, '', 1)}`;
+      this.#logger.log(msg);
     }
       
 
