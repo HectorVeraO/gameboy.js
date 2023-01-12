@@ -1,7 +1,7 @@
-import { MiB } from "./constants/InformationUnits";
+import { byte, MiB } from "./constants/InformationUnits";
 
 export class Logger {
-  constructor(bufferByteLength = 1 * MiB, encoding = 'utf8') {
+  constructor(bufferByteLength = 10 * MiB / byte, encoding = 'utf8') {
     this.#buffer = [];
     this.#bufferByteCapacity = bufferByteLength;
     this.#encoding = encoding;
