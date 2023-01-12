@@ -1,3 +1,4 @@
 export const Config = {
-  DEBUG: false,
+  DEBUG: true,
+  DISABLE_ASSERTIONS: false,
 };

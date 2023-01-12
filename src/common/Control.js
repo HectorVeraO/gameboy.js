@@ -1,9 +1,8 @@
-// TODO: Find a way to set "env" varibles
-const process = { env: { DISABLE_ASSERTIONS: false } }; // FIXME: Node::process mock xd
-const { DISABLE_ASSERTIONS } = process.env;
+import { Config } from "@root/gameboy.config";
+
 
 export const assert = (valid, msg) => {
-  if (DISABLE_ASSERTIONS) return;
+  if (Config.DISABLE_ASSERTIONS) return;
   if (valid) return;
   throw new Error(msg);
 }
